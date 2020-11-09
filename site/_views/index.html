@@ -1,0 +1,365 @@
+<!doctype html><html data-wf-page="5fa90dfcd7a705355848b2f0" data-wf-site="5fa90dfb2f679e078f35c8ea"><head><style>html{visibility: hidden;opacity:0;}</style>{%- assign item = page | getCurrentPageItem -%}{%- assign pageItem = item -%}
+  <meta charset="utf-8">
+  
+  
+  
+  
+  <meta content="Chomp - Webflow Ecommerce HTML Website Template" property="twitter:title">
+  <meta content="Free Webflow eCommerce template for food, delivery &amp; restaurant businesses. Start selling your products online with unlimited customization. Quickly change the colours, images &amp; fonts to take control over the visual direction. Build by flowbase.co" property="twitter:description">
+  
+  
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  
+  <link href="/static/css/normalize.css" rel="preload" type="text/css" as="style" onload="this.rel='stylesheet'" onerror="this.rel='stylesheet'">
+  <link href="/static/css/webflow.css" rel="preload" type="text/css" as="style" onload="this.rel='stylesheet'" onerror="this.rel='stylesheet'">
+  <link href="/static/css/eclipses-trendy-project.webflow.css" rel="preload" type="text/css" as="style" onload="this.rel='stylesheet'" onerror="this.rel='stylesheet'">
+  <!-- [if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js" type="text/javascript"></script><![endif] -->
+  <script type="text/javascript">!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js",("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);</script>
+  <link href="/static/images/favicon.png" rel="shortcut icon" type="image/x-icon">
+  <link href="/static/images/webclip.png" rel="apple-touch-icon">
+  <style>
+body{
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+</style>
+{%- seo seo -%}<link rel="preconnect" href="https://app.snipcart.com"><link rel="preconnect" href="https://cdn.snipcart.com"><link rel="preload" as="style" onload="this.rel='stylesheet'" onerror="this.rel='stylesheet'" href="/static/css/snipcart.css"></head>
+<body>
+  <div id="Banner" class="banner">
+    <div class="banner-wrap">
+      <div class="notice-text">We're open and available for takeaway &amp; delivery. <a href="/order/" class="white-link">Order Now</a>
+      </div>
+    </div>
+  </div>
+  <div data-collapse="medium" data-animation="default" data-duration="400" id="Navigation" data-w-id="33c883c6-4afc-cc73-3bca-d2857a9d4bc2" role="banner" class="navbar w-nav">
+    <div class="navigation-container">
+      <div class="navigation-left">
+        <a href="/" aria-current="page" class="brand w-nav-brand w--current"><img src="/static/images/Logo.svg" width="40" alt=""></a>
+      </div>
+      <div class="navigation-right">
+        <div class="menu-button w-nav-button">
+          <div class="icon w-icon-nav-menu"></div>
+        </div>
+        <nav role="navigation" class="nav-menu w-nav-menu">
+          <a href="/" aria-current="page" class="nav-link w-nav-link w--current">Home</a>
+          <a href="/order/" class="nav-link w-nav-link">Order</a>
+          <a href="/company/" class="nav-link w-nav-link">Company</a>
+          <a href="/faq/" class="nav-link w-nav-link">FAQ</a>
+          <a href="mailto:hello@website.com?subject=Hi" class="nav-link w-nav-link">Contact</a>
+        </nav>
+        <div data-node-type="commerce-cart-wrapper" data-open-product="" data-wf-cart-type="rightSidebar" data-wf-cart-query="" data-wf-page-link-href-prefix="" class="w-commerce-commercecartwrapper">
+          <a href="#" data-node-type="commerce-cart-open-link" class="w-commerce-commercecartopenlink cart-button w-inline-block"><svg class="w-commerce-commercecartopenlinkicon cart-icon" width="17px" height="17px" viewBox="0 0 17 17">
+              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                <path d="M2.60592789,2 L0,2 L0,0 L4.39407211,0 L4.84288393,4 L16,4 L16,9.93844589 L3.76940945,12.3694378 L2.60592789,2 Z M15.5,17 C14.6715729,17 14,16.3284271 14,15.5 C14,14.6715729 14.6715729,14 15.5,14 C16.3284271,14 17,14.6715729 17,15.5 C17,16.3284271 16.3284271,17 15.5,17 Z M5.5,17 C4.67157288,17 4,16.3284271 4,15.5 C4,14.6715729 4.67157288,14 5.5,14 C6.32842712,14 7,14.6715729 7,15.5 C7,16.3284271 6.32842712,17 5.5,17 Z" fill="currentColor" fill-rule="nonzero"></path>
+              </g>
+            </svg>
+            <div class="w-commerce-commercecartopenlinkcount cart-quantity">{{ item.data.userItemsCount }}</div>
+          </a>
+          <div data-node-type="commerce-cart-container-wrapper" style="display:none" class="w-commerce-commercecartcontainerwrapper w-commerce-commercecartcontainerwrapper--cartType-rightSidebar">
+            <div data-node-type="commerce-cart-container" class="w-commerce-commercecartcontainer">
+              <div class="w-commerce-commercecartheader">
+                <h4 class="w-commerce-commercecartheading">Your Order</h4>
+                <a href="#" data-node-type="commerce-cart-close-link" class="w-commerce-commercecartcloselink w-inline-block"><svg width="16px" height="16px" viewBox="0 0 16 16">
+                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                      <g fill-rule="nonzero" fill="#333333">
+                        <polygon points="6.23223305 8 0.616116524 13.6161165 2.38388348 15.3838835 8 9.76776695 13.6161165 15.3838835 15.3838835 13.6161165 9.76776695 8 15.3838835 2.38388348 13.6161165 0.616116524 8 6.23223305 2.38388348 0.616116524 0.616116524 2.38388348 6.23223305 8"></polygon>
+                      </g>
+                    </g>
+                  </svg></a>
+              </div>
+              <div class="w-commerce-commercecartformwrapper">
+                <form data-node-type="commerce-cart-form" style="display:none" class="w-commerce-commercecartform">
+                  <script type="text/x-wf-template" id="wf-template-33c883c6-4afc-cc73-3bca-d2857a9d4be4"><div data-node-type="cart-item" class="w-commerce-commercecartitem"><img data-commerce-type="variation-image" data-node-type="cart-item-image" class="w-commerce-commercecartitemimage" src="<%= it.image %>"><div data-node-type="cart-item-info" class="w-commerce-commercecartiteminfo"><div data-node-type="cart-product-name" class="w-commerce-commercecartproductname">&lt;%= it.name %&gt;</div><div data-commerce-type="variation-price">&lt;%= it.product.price%&gt;</div><div><div class="w-commerce-commercecartoptionlist">&lt;% Object.entries(it.metadata).forEach( data =&gt;  { %&gt;<div style="display: flex;"><div class="w-commerce-option-name">&lt;%= data[0] %&gt;</div><span>: </span><div class="w-commerce-option-value">&lt;%= data[1] %&gt;</div> </div>&lt;% }) %&gt;</div></div><a class="remove-button" href="#" data-node-type="cart-remove-link" data-product-id="<%= it.uniqueId %>"><div class="text-block-2">Remove</div></a></div><div data-node-type="cart-quantity"><input class="w-commerce-commercecartquantity" name="<%= it.uniqueId %>" type="number" value="<%= it.quantity %>"></div></div></script>
+                  <div class="w-commerce-commercecartlist" data-wf-collection="database.commerceOrder.userItems" data-wf-template-id="wf-template-33c883c6-4afc-cc73-3bca-d2857a9d4be4"></div>
+                  <div class="w-commerce-commercecartfooter">
+                    <div class="w-commerce-commercecartlineitem cart-line-item">
+                      <div>Subtotal</div>
+                      <div class="w-commerce-commercecartordervalue text-block">{{ item.data.subtotal | formatPrice }}</div>
+                    </div>
+                    <div>
+                      <div data-node-type="commerce-cart-quick-checkout-actions">
+                        
+                        
+                      </div>
+                      <a href="/checkout/" value="Continue to Checkout" data-node-type="cart-checkout-button" class="w-commerce-commercecartcheckoutbutton checkout-button" data-loading-text="Hang Tight...">Continue to Checkout</a>
+                    </div>
+                  </div>
+                </form>
+                <div class="w-commerce-commercecartemptystate empty-state">
+                  <div>We couldn't find any items in your cart.</div>
+                  <div class="button-arrow-wrap">
+                    <a href="/order/" class="button w-button">Start an Order</a><img src="/static/images/Drawn-Arrow.svg" alt="" class="arrow-drawn">
+                  </div>
+                </div>
+                <div style="display:none" data-node-type="commerce-cart-error" class="w-commerce-commercecarterrorstate">
+                  <div class="w-cart-error-msg" data-w-cart-quantity-error="Product is not available in this quantity." data-w-cart-checkout-error="Checkout is disabled on this site." data-w-cart-general-error="Something went wrong when adding this item to the cart." data-w-cart-cart_order_min-error="The order minimum was not met. Add more items to your cart to continue.">Product is not available in this quantity.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="Header" class="header">
+    <div class="container-flex">
+      <div class="hero-content">
+        <h1 style="-webkit-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);opacity:0" class="hero-h1">Beautiful food &amp; takeaway, <span class="brand-span">delivered</span> to your door.</h1>
+        <p style="-webkit-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);opacity:0" class="hero-paragraph">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500.</p>
+        <div style="-webkit-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);opacity:0" class="button-wrapper">
+          <a href="/order/" class="button w-button">Place an Order</a>
+        </div>
+        <div style="-webkit-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);opacity:0" class="review-wrap"><img src="/static/images/trustpilot-logo.svg" alt="" class="review-logo">
+          <div class="review-text"><span class="brand-span">4.8 out of 5</span> based on 2000+ reviews</div>
+        </div>
+      </div>
+      <div class="hero-image-wrap"><img src="/static/images/Hero-Image.png" alt="Food Delivery" style="opacity:0;-webkit-transform:translate3d(0, 0, 0) scale3d(0.95, 0.95, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(0, 0, 0) scale3d(0.95, 0.95, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(0, 0, 0) scale3d(0.95, 0.95, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(0, 0, 0) scale3d(0.95, 0.95, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0)" sizes="(max-width: 612px) 94vw, (max-width: 991px) 576px, 47vw" srcset="/static/images/Hero-Image-p-500.png 500w, /static/images/Hero-Image.png 576w" class="hero-image"></div>
+    </div>
+  </div>
+  <div class="content-section-bg">
+    <div class="container">
+      <div class="w-layout-grid content-grid">
+        <div class="content-block bg-text">
+          <h2>The home of<br>fresh products</h2>
+          <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500.</p>
+          <a href="/company/" class="button button-space w-button">Learn about us</a>
+        </div>
+        <div class="image-block"><img src="/static/images/Food-Image.png" sizes="(max-width: 556px) 94vw, 523px" srcset="/static/images/Group-33-p-500.png 500w, /static/images/Food-Image.png 523w" alt=""></div>
+      </div>
+    </div>
+  </div>
+  <div class="content-section">
+    <div class="container">
+      <div class="title-wrap-centre">
+        <h2>How it works.</h2>
+      </div>
+      <div class="w-layout-grid works-grid">
+        <div class="content-card"><img src="/static/images/Step-01.png" alt="" class="step-image">
+          <div class="content-wrapper">
+            <h5>Adapt your menu items</h5>
+            <p>Easily adapt your menu using the webflow CMS and allow customers to browse your items.</p>
+          </div>
+        </div>
+        <div class="line-column">
+          <div class="line"></div>
+        </div>
+        <div class="content-card"><img src="/static/images/Step-02.png" alt="" class="step-image">
+          <div class="content-wrapper">
+            <h5>Accept online orders &amp; takeout</h5>
+            <p>Let your customers order and pay via the powerful ecommerce system, or simple let them call your store.</p>
+          </div>
+        </div>
+        <div class="line-column">
+          <div class="line"></div>
+        </div>
+        <div class="content-card"><img src="/static/images/Step-03.png" alt="" class="step-image">
+          <div class="content-wrapper">
+            <h5>Manage delivery or takeout</h5>
+            <p>Manage your own logistics and take orders simply through the ecommerce system.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="content-section-bg">
+    <div class="container">
+      <div class="title-wrap-centre">
+        <h2>Browse our menu</h2>
+        <p>Use our menu to place an order online, or <a href="#">phone</a> our store to <br>place a pickup order. Fast and fresh food.</p>
+      </div>
+      <div data-duration-in="300" data-duration-out="100" class="w-tabs">
+        <div class="tab-menu-round w-tab-menu">
+          <a data-w-tab="Burgers" class="tab-link-round w-inline-block w-tab-link">
+            <div>Burgers</div>
+          </a>
+          <a data-w-tab="Sides" class="tab-link-round w-inline-block w-tab-link">
+            <div>Sides</div>
+          </a>
+          <a data-w-tab="Drinks" class="tab-link-round w-inline-block w-tab-link w--current">
+            <div>Drinks</div>
+          </a>
+        </div>
+        <div class="w-tab-content">
+          <div data-w-tab="Burgers" class="tab-pane-wrap w-tab-pane">
+            {%- assign collectionId = "main" -%}{%- assign collection = collections["c_8065a4f38cb815ce172af4d7c93bdde0"][collectionId] -%}<div class="w-dyn-list">
+              {%- if collection.length > 0 -%}<div role="list" class="order-collection w-dyn-items w-row">
+                {%- for item in collection -%}<div role="listitem" class="menu-item w-dyn-item w-col w-col-6">
+                  <div class="food-card">
+                    <a href="{{ item.url }}" class="food-image-square w-inline-block">{%- assign ref = item | resolveReference: "default-sku", "sku" -%}<img data-commerce-type="variation-image" src="{{ ref.data['main-image'].url | escape }}" alt="" class="food-image"></a>
+                    <div class="food-card-content">
+                      <a href="{{ item.url }}" class="food-title-wrap w-inline-block">
+                        <h6>{{ item.data.name }}</h6>
+                        {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<div data-commerce-type="variation-price" class="price">{{ ref.data.price | formatPrice }}</div>
+                      </a>
+                      <p class="paragraph">{{ item.data.description }}</p>
+                      <div class="add-to-cart">
+                        {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<form data-node-type="commerce-add-to-cart-form" class="w-commerce-commerceaddtocartform default-state">{%- if item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option-list">{%- for prop in item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option" name="data-sku-property"><label>{{ prop.name }}</label><select class="w-select" name="{{ prop.name }}">{% for option in prop.enum %}<option value="{{ option.name | slugify }}">{{option.name}}</option>{% endfor %}</select></fieldset>{%- endfor -%}</fieldset>{%- endif -%}<input type="number" pattern="^[0-9]+$" inputmode="numeric" id="quantity-77d000eb734842aa4cf87b0bb03800c1" name="commerce-add-to-cart-quantity-input" min="1" class="w-commerce-commerceaddtocartquantityinput quantity" value="1"><input type="submit" value="Add To Cart" data-node-type="commerce-add-to-cart-button" data-loading-text="Adding to cart..." class="w-commerce-commerceaddtocartbutton order-button"><script type="application/json">{{ collections._variations[item.data.slug].variationsData | json }}</script></form>
+                        <div style="display:none" class="w-commerce-commerceaddtocartoutofstock out-of-stock-state">
+                          <div>This product is out of stock.</div>
+                        </div>
+                        <div data-node-type="commerce-add-to-cart-error" style="display:none" class="w-commerce-commerceaddtocarterror">
+                          <div data-node-type="commerce-add-to-cart-error" data-w-add-to-cart-quantity-error="Product is not available in this quantity." data-w-add-to-cart-general-error="Something went wrong when adding this item to the cart." data-w-add-to-cart-buy-now-error="Something went wrong when trying to purchase this item." data-w-add-to-cart-checkout-disabled-error="Checkout is disabled on this site." data-w-add-to-cart-select-all-options-error="Please select an option in each set.">Product is not available in this quantity.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>{%- endfor -%}
+              </div>{%- endif -%}
+              {%- unless collection.length > 0 -%}<div class="w-dyn-empty">
+                <div>No items found.</div>
+              </div>{%- endunless -%}
+            </div>
+          </div>
+          <div data-w-tab="Sides" class="w-tab-pane">
+            {%- assign collectionId = "main" -%}{%- assign collection = collections["c_f99c5c00119ccdf717d5b38c079982f5"][collectionId] -%}<div class="w-dyn-list">
+              {%- if collection.length > 0 -%}<div role="list" class="order-collection w-dyn-items w-row">
+                {%- for item in collection -%}<div role="listitem" class="menu-item w-dyn-item w-col w-col-6">
+                  <div class="food-card">
+                    <a href="{{ item.url }}" class="food-image-square w-inline-block">{%- assign ref = item | resolveReference: "default-sku", "sku" -%}<img data-commerce-type="variation-image" src="{{ ref.data['main-image'].url | escape }}" alt="" class="food-image"></a>
+                    <div class="food-card-content">
+                      <a href="{{ item.url }}" class="food-title-wrap w-inline-block">
+                        <h6>{{ item.data.name }}</h6>
+                        {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<div data-commerce-type="variation-price" class="price">{{ ref.data.price | formatPrice }}</div>
+                      </a>
+                      <p class="paragraph">{{ item.data.description }}</p>
+                      <div class="add-to-cart">
+                        {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<form data-node-type="commerce-add-to-cart-form" class="w-commerce-commerceaddtocartform default-state">{%- if item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option-list">{%- for prop in item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option" name="data-sku-property"><label>{{ prop.name }}</label><select class="w-select" name="{{ prop.name }}">{% for option in prop.enum %}<option value="{{ option.name | slugify }}">{{option.name}}</option>{% endfor %}</select></fieldset>{%- endfor -%}</fieldset>{%- endif -%}<input type="number" pattern="^[0-9]+$" inputmode="numeric" id="quantity-77d000eb734842aa4cf87b0bb03800c1" name="commerce-add-to-cart-quantity-input" min="1" class="w-commerce-commerceaddtocartquantityinput quantity" value="1"><input type="submit" value="Add To Cart" data-node-type="commerce-add-to-cart-button" data-loading-text="Adding to cart..." class="w-commerce-commerceaddtocartbutton order-button"><script type="application/json">{{ collections._variations[item.data.slug].variationsData | json }}</script></form>
+                        <div style="display:none" class="w-commerce-commerceaddtocartoutofstock out-of-stock-state">
+                          <div>This product is out of stock.</div>
+                        </div>
+                        <div data-node-type="commerce-add-to-cart-error" style="display:none" class="w-commerce-commerceaddtocarterror">
+                          <div data-node-type="commerce-add-to-cart-error" data-w-add-to-cart-quantity-error="Product is not available in this quantity." data-w-add-to-cart-general-error="Something went wrong when adding this item to the cart." data-w-add-to-cart-buy-now-error="Something went wrong when trying to purchase this item." data-w-add-to-cart-checkout-disabled-error="Checkout is disabled on this site." data-w-add-to-cart-select-all-options-error="Please select an option in each set.">Product is not available in this quantity.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>{%- endfor -%}
+              </div>{%- endif -%}
+              {%- unless collection.length > 0 -%}<div class="w-dyn-empty">
+                <div>No items found.</div>
+              </div>{%- endunless -%}
+            </div>
+          </div>
+          <div data-w-tab="Drinks" class="w-tab-pane w--tab-active">
+            {%- assign collectionId = "main" -%}{%- assign collection = collections["c_9c6dba48575d59fdccf7b7218b735cff"][collectionId] -%}<div class="w-dyn-list">
+              {%- if collection.length > 0 -%}<div role="list" class="order-collection w-dyn-items w-row">
+                {%- for item in collection -%}<div role="listitem" class="menu-item w-dyn-item w-col w-col-6">
+                  <div class="food-card">
+                    <a href="{{ item.url }}" class="food-image-square w-inline-block">{%- assign ref = item | resolveReference: "default-sku", "sku" -%}<img data-commerce-type="variation-image" src="{{ ref.data['main-image'].url | escape }}" alt="" class="food-image"></a>
+                    <div class="food-card-content">
+                      <a href="{{ item.url }}" class="food-title-wrap w-inline-block">
+                        <h6>{{ item.data.name }}</h6>
+                        {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<div data-commerce-type="variation-price" class="price">{{ ref.data.price | formatPrice }}</div>
+                      </a>
+                      <p class="paragraph">{{ item.data.description }}</p>
+                      <div class="add-to-cart">
+                        {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<form data-node-type="commerce-add-to-cart-form" class="w-commerce-commerceaddtocartform default-state">{%- if item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option-list">{%- for prop in item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option" name="data-sku-property"><label>{{ prop.name }}</label><select class="select-field w-select" name="{{ prop.name }}">{% for option in prop.enum %}<option value="{{ option.name | slugify }}">{{option.name}}</option>{% endfor %}</select></fieldset>{%- endfor -%}</fieldset>{%- endif -%}
+                          <div class="div-block-2"><input type="number" pattern="^[0-9]+$" inputmode="numeric" id="quantity-77d000eb734842aa4cf87b0bb03800c1" name="commerce-add-to-cart-quantity-input" min="1" class="w-commerce-commerceaddtocartquantityinput quantity" value="1"><input type="submit" value="Add To Cart" data-node-type="commerce-add-to-cart-button" data-loading-text="Adding to cart..." class="w-commerce-commerceaddtocartbutton order-button"></div>
+                        <script type="application/json">{{ collections._variations[item.data.slug].variationsData | json }}</script></form>
+                        <div style="display:none" class="w-commerce-commerceaddtocartoutofstock out-of-stock-state">
+                          <div>This product is out of stock.</div>
+                        </div>
+                        <div data-node-type="commerce-add-to-cart-error" style="display:none" class="w-commerce-commerceaddtocarterror">
+                          <div data-node-type="commerce-add-to-cart-error" data-w-add-to-cart-quantity-error="Product is not available in this quantity." data-w-add-to-cart-general-error="Something went wrong when adding this item to the cart." data-w-add-to-cart-buy-now-error="Something went wrong when trying to purchase this item." data-w-add-to-cart-checkout-disabled-error="Checkout is disabled on this site." data-w-add-to-cart-select-all-options-error="Please select an option in each set.">Product is not available in this quantity.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>{%- endfor -%}
+              </div>{%- endif -%}
+              {%- unless collection.length > 0 -%}<div class="w-dyn-empty">
+                <div>No items found.</div>
+              </div>{%- endunless -%}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="-webkit-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(-25PX, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);opacity:0" class="button-wrapper">
+        <a href="/order/" class="button w-button">See Full Menu</a>
+      </div>
+    </div>
+  </div>
+  <div class="content-section">
+    <div class="container">
+      <div class="w-layout-grid content-grid">
+        <div class="image-block"><img src="/static/images/Phones.png" sizes="94vw" srcset="/static/images/Phones-p-500.png 500w, /static/images/Phones-p-800.png 800w, /static/images/Phones.png 2103w" alt=""><img src="/static/images/Content-Pattern.svg" alt="" class="pattern"></div>
+        <div class="content-block">
+          <h2>Order online with our simple checkout.</h2>
+          <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500.</p>
+          <a href="/faq/" class="button button-space w-button">See our FAQ</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="content-section-bg">
+    <div class="container">
+      <div class="w-layout-grid content-grid">
+        <div class="content-block bg-text">
+          <h2>Call our store and takeaway when it suits you best.</h2>
+          <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500.</p>
+          <a href="#" class="button button-space w-button">Ph. +61 233 2333</a>
+        </div>
+        <div class="image-block"><img src="/static/images/Food-Takeaway.png" alt=""></div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-section">
+    <div class="w-layout-grid cta-grid">
+      <div class="cta-image"></div>
+      <div class="cta-content">
+        <h1 class="cta-heading"><span class="dark-span">Support</span> good food<br>and local business.</h1>
+        <a href="/order/" class="button-white button-space w-button">Order Now</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="container">
+      <div class="w-layout-grid footer-grid">
+        <div id="w-node-a159dcc6da5a-dcc6da57" class="footer-column"><img src="/static/images/Logo.svg" width="40" alt="" class="footer-logo">
+          <p>Takeaway &amp; Delivery template<br>for small - medium businesses. </p>
+        </div>
+        <div id="w-node-a159dcc6da5e-dcc6da57" class="footer-column">
+          <div class="title">company</div>
+          <a href="/" aria-current="page" class="footer-link w--current">Home</a>
+          <a href="/order/" class="footer-link">Order</a>
+          <a href="/faq/" class="footer-link">FAQ</a>
+          <a href="mailto:hello@website.com?subject=Hi" class="footer-link">Contact</a>
+        </div>
+        <div id="w-node-a159dcc6da69-dcc6da57" class="footer-column">
+          <div class="title">TEMPLATE</div>
+          <a href="/template/styleguide/" class="footer-link">Style Guide</a>
+          <a href="/template/changelog/" class="footer-link">Changelog</a>
+          <a href="/template/licence/" class="footer-link">Licence</a>
+          <a href="https://university.webflow.com/" target="_blank" class="footer-link">Webflow University</a>
+        </div>
+        <div id="w-node-a159dcc6da72-dcc6da57" class="footer-column">
+          <div class="title">FLOWBASE </div>
+          <a href="http://www.flowbase.co" target="_blank" class="footer-link">More Cloneables</a>
+        </div>
+      </div>
+      <div class="footer-legal">
+        <div class="footer-detail-left">
+          <div class="legal">Built by <a href="http://www.flowbase.co" target="_blank" class="webflow-link">Flowbase</a> &nbsp;· Powered by <a href="http://webflow.com/" target="_blank" class="webflow-link">Webflow</a>
+          </div>
+        </div>
+        <div class="footer-detail-right">
+          <div class="social-icon-wrap">
+            <a href="#" class="social-link w-inline-block"><img src="https://uploads-ssl.webflow.com/5e360a99f4dd53fd793925af/5e362b9c121267b0fabbef18_social-instagram.svg" alt="" class="social-icon"></a>
+            <a href="#" class="social-link w-inline-block"><img src="https://uploads-ssl.webflow.com/5e360a99f4dd53fd793925af/5e362b9cf4dd53d8073a05cd_social-twitter.svg" alt="" class="social-icon"></a>
+            <a href="#" class="social-link w-inline-block"><img src="https://uploads-ssl.webflow.com/5e360a99f4dd53fd793925af/5e362b9c7c077b1740e27d28_social-youtube.svg" alt="" class="social-icon"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js" type="text/javascript" crossorigin="anonymous"></script>
+  <script src="/static/js/webflow.js" type="text/javascript" async="" defer=""></script>
+  <!-- [if lte IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/placeholders/3.0.2/placeholders.min.js"></script><![endif] -->
+
+<script src="/static/js/udesly-11ty.min.js" defer="" async=""></script><script>document.querySelectorAll('link[rel="preload"]').forEach(function(e) { e.rel = "stylesheet" })</script><script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script><script>window.netlifyIdentity&&window.netlifyIdentity.on("init",function(a){a||window.netlifyIdentity.on("login",()=>{document.location.href="/admin/"})});</script><div id="snipcart" hidden="" data-api-key="N2ExODMxNmYtNjg0OC00OTIwLTg4NzItMzc5ZmE5NTA3YjRmNjM3MDAxNTYwMjkzMDE4NzQ1" data-config-add-product-behavior="none"></div><script>window.ecommerceUtils = {
+      priceTemplate: function(amount, currencyCode) {
+            amount = amount.toLocaleString('en-UK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/gm, ',').replace(/\./gm, '.');
+            return `$ ${amount} USD`;
+      },
+      settings: {"symbol":"$","decimal":".","fractionDigits":2,"group":",","template":"{{wf {\"path\":\"symbol\",\"type\":\"PlainText\"} }} {{wf {\"path\":\"amount\",\"type\":\"CommercePrice\"} }} {{wf {\"path\":\"currencyCode\",\"type\":\"PlainText\"} }}","hideDecimalForWholeNumbers":false,"currencyCode":"USD"}
+    }</script><script type="text/javascript" src="/static/js/udesly-snipcart.js" async="" defer=""></script><script type="text/javascript" src="https://cdn.snipcart.com/themes/v3.0.24/default/snipcart.js" async="" defer=""></script></body></html>

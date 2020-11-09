@@ -1,0 +1,104 @@
+{
+  "c_8065a4f38cb815ce172af4d7c93bdde0": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "category/burgers.md"
+        }
+      ]
+    }
+  },
+  "c_f99c5c00119ccdf717d5b38c079982f5": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "category/sides.md"
+        }
+      ]
+    }
+  },
+  "c_9c6dba48575d59fdccf7b7218b735cff": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "category/drinks.md"
+        }
+      ]
+    }
+  },
+  "c_351abf5e57aec6f4364e7bbc1e4df4c1": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "DYN_CONTEXT"
+        }
+      ]
+    }
+  },
+  "c_1f786b270999169d223bffd5970c0272": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "DYN_CONTEXT.category"
+        }
+      ],
+      "offset": 0,
+      "limit": 4
+    }
+  },
+  "c_8f5e300f53fd76dad032e8098cf27f80": {
+    "collection": "product",
+    "paginationLimit": 10
+  },
+  "c_bffbe92d005f9fb68373c010dc1c9a30": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "category/burgers.md"
+        }
+      ]
+    }
+  },
+  "c_9468c53b1694cfad8367ef8db61a6aba": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "category/sides.md"
+        }
+      ]
+    }
+  },
+  "c_ff6298254a4aab1a277640b755b257f6": {
+    "collection": "product",
+    "query": {
+      "fields": [
+        {
+          "fieldPath": "category",
+          "operatorName": "idin",
+          "value": "category/drinks.md"
+        }
+      ]
+    }
+  }
+}
