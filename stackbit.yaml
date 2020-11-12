@@ -12,7 +12,6 @@ models:
   pages:
     type: "page"
     label: "Pages"
-    urlPath: "/{slug}"
   product:
     type: "page"
     label: "Products"
