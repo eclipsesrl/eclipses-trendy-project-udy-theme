@@ -420,7 +420,7 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
 
   eleventyConfig.addLiquidFilter('resolveReference', function (item, field, fieldType) {
 
-    const itemField = item.data[field]
+    let itemField = item.data[field]
     let ref = {};
     if (itemField) {
 
