@@ -425,7 +425,9 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
     if (itemField) {
 
       if (typeof itemField == "string") {
-
+         if (!itemField.startsWith('site/')) {
+          itemField = 'site/' + itemField;
+          }
         let refSlug = itemField.includes('.md') ? itemField.split('/')[2].replace('.md', '') : itemField;
         if (!fieldType) {
           fieldType = itemField.split('/')[1];
@@ -449,6 +451,9 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
     if (itemField && Array.isArray(itemField)) {
 
       ref = itemField.map(e => {
+        if (!e.startsWith('site/')) {
+          e = 'site/' + e;
+        }
         let refSlug = e.includes('.md') ? e.split('/')[2].replace('.md', '') : e;
         if (!fieldType) {
           fieldType = e.split('/')[1];
