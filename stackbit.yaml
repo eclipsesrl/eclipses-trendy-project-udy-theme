@@ -9,6 +9,10 @@ metadata:
   title: "eclipses trendy project"
   description: "Theme created in Webflow and converted with Udesly"
 models:
+  pages:
+    type: "page"
+    label: "Pages"
+    urlPath: "/{slug}"
   product:
     type: "page"
     label: "Products"
