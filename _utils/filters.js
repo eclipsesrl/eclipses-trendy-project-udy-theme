@@ -425,9 +425,9 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
     if (itemField) {
 
       if (typeof itemField == "string") {
-         if (!itemField.startsWith('site/')) {
+        if (!itemField.startsWith('site/')) {
           itemField = 'site/' + itemField;
-          }
+        }
         let refSlug = itemField.includes('.md') ? itemField.split('/')[2].replace('.md', '') : itemField;
         if (!fieldType) {
           fieldType = itemField.split('/')[1];
