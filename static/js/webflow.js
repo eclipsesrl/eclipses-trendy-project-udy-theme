@@ -880,7 +880,7 @@ module.exports = function (it, key) {
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var IE8_DOM_DEFINE = __webpack_require__(187);
 var anObject = __webpack_require__(36);
 var toPrimitive = __webpack_require__(83);
@@ -921,6 +921,345 @@ module.exports = root;
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+ // @wf-will-never-add-flow-to-this-file
+
+/* globals window, document, navigator, WEBFLOW_ENV_TEST */
+
+/* eslint-disable no-var */
+
+/**
+ * Webflow: Core site library
+ */
+
+var Webflow = {};
+var modules = {};
+var primary = [];
+var secondary = window.Webflow || [];
+var $ = window.jQuery;
+var $win = $(window);
+var $doc = $(document);
+var isFunction = $.isFunction;
+
+var _ = Webflow._ = __webpack_require__(316);
+
+var tram = Webflow.tram = __webpack_require__(184) && $.tram;
+var domready = false;
+var destroyed = false;
+tram.config.hideBackface = false;
+tram.config.keepInherited = true;
+/**
+ * Webflow.define - Define a named module
+ * @param  {string} name
+ * @param  {function} factory
+ * @param  {object} options
+ * @return {object}
+ */
+
+Webflow.define = function (name, factory, options) {
+  if (modules[name]) {
+    unbindModule(modules[name]);
+  }
+
+  var instance = modules[name] = factory($, _, options) || {};
+  bindModule(instance);
+  return instance;
+};
+/**
+ * Webflow.require - Require a named module
+ * @param  {string} name
+ * @return {object}
+ */
+
+
+Webflow.require = function (name) {
+  return modules[name];
+};
+
+function bindModule(module) {
+  // If running in Webflow app, subscribe to design/preview events
+  if (Webflow.env()) {
+    isFunction(module.design) && $win.on('__wf_design', module.design);
+    isFunction(module.preview) && $win.on('__wf_preview', module.preview);
+  } // Subscribe to front-end destroy event
+
+
+  isFunction(module.destroy) && $win.on('__wf_destroy', module.destroy); // Look for ready method on module
+
+  if (module.ready && isFunction(module.ready)) {
+    addReady(module);
+  }
+}
+
+function addReady(module) {
+  // If domready has already happened, run ready method
+  if (domready) {
+    module.ready();
+    return;
+  } // Otherwise add ready method to the primary queue (only once)
+
+
+  if (_.contains(primary, module.ready)) {
+    return;
+  }
+
+  primary.push(module.ready);
+}
+
+function unbindModule(module) {
+  // Unsubscribe module from window events
+  isFunction(module.design) && $win.off('__wf_design', module.design);
+  isFunction(module.preview) && $win.off('__wf_preview', module.preview);
+  isFunction(module.destroy) && $win.off('__wf_destroy', module.destroy); // Remove ready method from primary queue
+
+  if (module.ready && isFunction(module.ready)) {
+    removeReady(module);
+  }
+}
+
+function removeReady(module) {
+  primary = _.filter(primary, function (readyFn) {
+    return readyFn !== module.ready;
+  });
+}
+/**
+ * Webflow.push - Add a ready handler into secondary queue
+ * @param {function} ready  Callback to invoke on domready
+ */
+
+
+Webflow.push = function (ready) {
+  // If domready has already happened, invoke handler
+  if (domready) {
+    isFunction(ready) && ready();
+    return;
+  } // Otherwise push into secondary queue
+
+
+  secondary.push(ready);
+};
+/**
+ * Webflow.env - Get the state of the Webflow app
+ * @param {string} mode [optional]
+ * @return {boolean}
+ */
+
+
+Webflow.env = function (mode) {
+  var designFlag = window.__wf_design;
+  var inApp = typeof designFlag !== 'undefined';
+
+  if (!mode) {
+    return inApp;
+  }
+
+  if (mode === 'design') {
+    return inApp && designFlag;
+  }
+
+  if (mode === 'preview') {
+    return inApp && !designFlag;
+  }
+
+  if (mode === 'slug') {
+    return inApp && window.__wf_slug;
+  }
+
+  if (mode === 'editor') {
+    return window.WebflowEditor;
+  }
+
+  if (mode === 'test') {
+    return  false || window.__wf_test;
+  }
+
+  if (mode === 'frame') {
+    return window !== window.top;
+  }
+}; // Feature detects + browser sniffs  ಠ_ಠ
+
+
+var userAgent = navigator.userAgent.toLowerCase();
+var touch = Webflow.env.touch = 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch;
+var chrome = Webflow.env.chrome = /chrome/.test(userAgent) && /Google/.test(navigator.vendor) && parseInt(userAgent.match(/chrome\/(\d+)\./)[1], 10);
+var ios = Webflow.env.ios = /(ipod|iphone|ipad)/.test(userAgent);
+Webflow.env.safari = /safari/.test(userAgent) && !chrome && !ios; // Maintain current touch target to prevent late clicks on touch devices
+
+var touchTarget; // Listen for both events to support touch/mouse hybrid devices
+
+touch && $doc.on('touchstart mousedown', function (evt) {
+  touchTarget = evt.target;
+});
+/**
+ * Webflow.validClick - validate click target against current touch target
+ * @param  {HTMLElement} clickTarget  Element being clicked
+ * @return {Boolean}  True if click target is valid (always true on non-touch)
+ */
+
+Webflow.validClick = touch ? function (clickTarget) {
+  return clickTarget === touchTarget || $.contains(clickTarget, touchTarget);
+} : function () {
+  return true;
+};
+/**
+ * Webflow.resize, Webflow.scroll - throttled event proxies
+ */
+
+var resizeEvents = 'resize.webflow orientationchange.webflow load.webflow';
+var scrollEvents = 'scroll.webflow ' + resizeEvents;
+Webflow.resize = eventProxy($win, resizeEvents);
+Webflow.scroll = eventProxy($win, scrollEvents);
+Webflow.redraw = eventProxy(); // Create a proxy instance for throttled events
+
+function eventProxy(target, types) {
+  // Set up throttled method (using custom frame-based _.throttle)
+  var handlers = [];
+  var proxy = {};
+  proxy.up = _.throttle(function (evt) {
+    _.each(handlers, function (h) {
+      h(evt);
+    });
+  }); // Bind events to target
+
+  if (target && types) {
+    target.on(types, proxy.up);
+  }
+  /**
+   * Add an event handler
+   * @param  {function} handler
+   */
+
+
+  proxy.on = function (handler) {
+    if (typeof handler !== 'function') {
+      return;
+    }
+
+    if (_.contains(handlers, handler)) {
+      return;
+    }
+
+    handlers.push(handler);
+  };
+  /**
+   * Remove an event handler
+   * @param  {function} handler
+   */
+
+
+  proxy.off = function (handler) {
+    // If no arguments supplied, clear all handlers
+    if (!arguments.length) {
+      handlers = [];
+      return;
+    } // Otherwise, remove handler from the list
+
+
+    handlers = _.filter(handlers, function (h) {
+      return h !== handler;
+    });
+  };
+
+  return proxy;
+} // Webflow.location - Wrap window.location in api
+
+
+Webflow.location = function (url) {
+  window.location = url;
+};
+
+if (Webflow.env()) {
+  // Ignore redirects inside a Webflow design/edit environment
+  Webflow.location = function () {};
+} // Webflow.ready - Call primary and secondary handlers
+
+
+Webflow.ready = function () {
+  domready = true; // Restore modules after destroy
+
+  if (destroyed) {
+    restoreModules(); // Otherwise run primary ready methods
+  } else {
+    _.each(primary, callReady);
+  } // Run secondary ready methods
+
+
+  _.each(secondary, callReady); // Trigger resize
+
+
+  Webflow.resize.up();
+};
+
+function callReady(readyFn) {
+  isFunction(readyFn) && readyFn();
+}
+
+function restoreModules() {
+  destroyed = false;
+
+  _.each(modules, bindModule);
+}
+/**
+ * Webflow.load - Add a window load handler that will run even if load event has already happened
+ * @param  {function} handler
+ */
+
+
+var deferLoad;
+
+Webflow.load = function (handler) {
+  deferLoad.then(handler);
+};
+
+function bindLoad() {
+  // Reject any previous deferred (to support destroy)
+  if (deferLoad) {
+    deferLoad.reject();
+    $win.off('load', deferLoad.resolve);
+  } // Create deferred and bind window load event
+
+
+  deferLoad = new $.Deferred();
+  $win.on('load', deferLoad.resolve);
+} // Webflow.destroy - Trigger a destroy event for all modules
+
+
+Webflow.destroy = function (options) {
+  options = options || {};
+  destroyed = true;
+  $win.triggerHandler('__wf_destroy'); // Allow domready reset for tests
+
+  if (options.domready != null) {
+    domready = options.domready;
+  } // Unbind modules
+
+
+  _.each(modules, unbindModule); // Clear any proxy event handlers
+
+
+  Webflow.resize.off();
+  Webflow.scroll.off();
+  Webflow.redraw.off(); // Clear any queued ready methods
+
+  primary = [];
+  secondary = []; // If load event has not yet fired, replace the deferred
+
+  if (deferLoad.state() === 'pending') {
+    bindLoad();
+  }
+}; // Listen for domready
+
+
+$(Webflow.ready); // Listen for window.onload and resolve deferred
+
+bindLoad(); // Export commonjs module
+
+module.exports = window.Webflow = Webflow;
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
 var fails = __webpack_require__(12);
 
 // Thank's IE8 for his funny defineProperty
@@ -930,7 +1269,7 @@ module.exports = !fails(function () {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = function (it) {
@@ -939,7 +1278,7 @@ module.exports = function (it) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var wellKnownSymbol = __webpack_require__(5);
@@ -962,7 +1301,7 @@ module.exports = function (key) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Symbol = __webpack_require__(53),
@@ -996,7 +1335,7 @@ module.exports = baseGetTag;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1410,345 +1749,6 @@ var trackOrder = function trackOrder(apolloClient, finalizedOrder) {
 exports.trackOrder = trackOrder;
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
- // @wf-will-never-add-flow-to-this-file
-
-/* globals window, document, navigator, WEBFLOW_ENV_TEST */
-
-/* eslint-disable no-var */
-
-/**
- * Webflow: Core site library
- */
-
-var Webflow = {};
-var modules = {};
-var primary = [];
-var secondary = window.Webflow || [];
-var $ = window.jQuery;
-var $win = $(window);
-var $doc = $(document);
-var isFunction = $.isFunction;
-
-var _ = Webflow._ = __webpack_require__(316);
-
-var tram = Webflow.tram = __webpack_require__(184) && $.tram;
-var domready = false;
-var destroyed = false;
-tram.config.hideBackface = false;
-tram.config.keepInherited = true;
-/**
- * Webflow.define - Define a named module
- * @param  {string} name
- * @param  {function} factory
- * @param  {object} options
- * @return {object}
- */
-
-Webflow.define = function (name, factory, options) {
-  if (modules[name]) {
-    unbindModule(modules[name]);
-  }
-
-  var instance = modules[name] = factory($, _, options) || {};
-  bindModule(instance);
-  return instance;
-};
-/**
- * Webflow.require - Require a named module
- * @param  {string} name
- * @return {object}
- */
-
-
-Webflow.require = function (name) {
-  return modules[name];
-};
-
-function bindModule(module) {
-  // If running in Webflow app, subscribe to design/preview events
-  if (Webflow.env()) {
-    isFunction(module.design) && $win.on('__wf_design', module.design);
-    isFunction(module.preview) && $win.on('__wf_preview', module.preview);
-  } // Subscribe to front-end destroy event
-
-
-  isFunction(module.destroy) && $win.on('__wf_destroy', module.destroy); // Look for ready method on module
-
-  if (module.ready && isFunction(module.ready)) {
-    addReady(module);
-  }
-}
-
-function addReady(module) {
-  // If domready has already happened, run ready method
-  if (domready) {
-    module.ready();
-    return;
-  } // Otherwise add ready method to the primary queue (only once)
-
-
-  if (_.contains(primary, module.ready)) {
-    return;
-  }
-
-  primary.push(module.ready);
-}
-
-function unbindModule(module) {
-  // Unsubscribe module from window events
-  isFunction(module.design) && $win.off('__wf_design', module.design);
-  isFunction(module.preview) && $win.off('__wf_preview', module.preview);
-  isFunction(module.destroy) && $win.off('__wf_destroy', module.destroy); // Remove ready method from primary queue
-
-  if (module.ready && isFunction(module.ready)) {
-    removeReady(module);
-  }
-}
-
-function removeReady(module) {
-  primary = _.filter(primary, function (readyFn) {
-    return readyFn !== module.ready;
-  });
-}
-/**
- * Webflow.push - Add a ready handler into secondary queue
- * @param {function} ready  Callback to invoke on domready
- */
-
-
-Webflow.push = function (ready) {
-  // If domready has already happened, invoke handler
-  if (domready) {
-    isFunction(ready) && ready();
-    return;
-  } // Otherwise push into secondary queue
-
-
-  secondary.push(ready);
-};
-/**
- * Webflow.env - Get the state of the Webflow app
- * @param {string} mode [optional]
- * @return {boolean}
- */
-
-
-Webflow.env = function (mode) {
-  var designFlag = window.__wf_design;
-  var inApp = typeof designFlag !== 'undefined';
-
-  if (!mode) {
-    return inApp;
-  }
-
-  if (mode === 'design') {
-    return inApp && designFlag;
-  }
-
-  if (mode === 'preview') {
-    return inApp && !designFlag;
-  }
-
-  if (mode === 'slug') {
-    return inApp && window.__wf_slug;
-  }
-
-  if (mode === 'editor') {
-    return window.WebflowEditor;
-  }
-
-  if (mode === 'test') {
-    return  false || window.__wf_test;
-  }
-
-  if (mode === 'frame') {
-    return window !== window.top;
-  }
-}; // Feature detects + browser sniffs  ಠ_ಠ
-
-
-var userAgent = navigator.userAgent.toLowerCase();
-var touch = Webflow.env.touch = 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch;
-var chrome = Webflow.env.chrome = /chrome/.test(userAgent) && /Google/.test(navigator.vendor) && parseInt(userAgent.match(/chrome\/(\d+)\./)[1], 10);
-var ios = Webflow.env.ios = /(ipod|iphone|ipad)/.test(userAgent);
-Webflow.env.safari = /safari/.test(userAgent) && !chrome && !ios; // Maintain current touch target to prevent late clicks on touch devices
-
-var touchTarget; // Listen for both events to support touch/mouse hybrid devices
-
-touch && $doc.on('touchstart mousedown', function (evt) {
-  touchTarget = evt.target;
-});
-/**
- * Webflow.validClick - validate click target against current touch target
- * @param  {HTMLElement} clickTarget  Element being clicked
- * @return {Boolean}  True if click target is valid (always true on non-touch)
- */
-
-Webflow.validClick = touch ? function (clickTarget) {
-  return clickTarget === touchTarget || $.contains(clickTarget, touchTarget);
-} : function () {
-  return true;
-};
-/**
- * Webflow.resize, Webflow.scroll - throttled event proxies
- */
-
-var resizeEvents = 'resize.webflow orientationchange.webflow load.webflow';
-var scrollEvents = 'scroll.webflow ' + resizeEvents;
-Webflow.resize = eventProxy($win, resizeEvents);
-Webflow.scroll = eventProxy($win, scrollEvents);
-Webflow.redraw = eventProxy(); // Create a proxy instance for throttled events
-
-function eventProxy(target, types) {
-  // Set up throttled method (using custom frame-based _.throttle)
-  var handlers = [];
-  var proxy = {};
-  proxy.up = _.throttle(function (evt) {
-    _.each(handlers, function (h) {
-      h(evt);
-    });
-  }); // Bind events to target
-
-  if (target && types) {
-    target.on(types, proxy.up);
-  }
-  /**
-   * Add an event handler
-   * @param  {function} handler
-   */
-
-
-  proxy.on = function (handler) {
-    if (typeof handler !== 'function') {
-      return;
-    }
-
-    if (_.contains(handlers, handler)) {
-      return;
-    }
-
-    handlers.push(handler);
-  };
-  /**
-   * Remove an event handler
-   * @param  {function} handler
-   */
-
-
-  proxy.off = function (handler) {
-    // If no arguments supplied, clear all handlers
-    if (!arguments.length) {
-      handlers = [];
-      return;
-    } // Otherwise, remove handler from the list
-
-
-    handlers = _.filter(handlers, function (h) {
-      return h !== handler;
-    });
-  };
-
-  return proxy;
-} // Webflow.location - Wrap window.location in api
-
-
-Webflow.location = function (url) {
-  window.location = url;
-};
-
-if (Webflow.env()) {
-  // Ignore redirects inside a Webflow design/edit environment
-  Webflow.location = function () {};
-} // Webflow.ready - Call primary and secondary handlers
-
-
-Webflow.ready = function () {
-  domready = true; // Restore modules after destroy
-
-  if (destroyed) {
-    restoreModules(); // Otherwise run primary ready methods
-  } else {
-    _.each(primary, callReady);
-  } // Run secondary ready methods
-
-
-  _.each(secondary, callReady); // Trigger resize
-
-
-  Webflow.resize.up();
-};
-
-function callReady(readyFn) {
-  isFunction(readyFn) && readyFn();
-}
-
-function restoreModules() {
-  destroyed = false;
-
-  _.each(modules, bindModule);
-}
-/**
- * Webflow.load - Add a window load handler that will run even if load event has already happened
- * @param  {function} handler
- */
-
-
-var deferLoad;
-
-Webflow.load = function (handler) {
-  deferLoad.then(handler);
-};
-
-function bindLoad() {
-  // Reject any previous deferred (to support destroy)
-  if (deferLoad) {
-    deferLoad.reject();
-    $win.off('load', deferLoad.resolve);
-  } // Create deferred and bind window load event
-
-
-  deferLoad = new $.Deferred();
-  $win.on('load', deferLoad.resolve);
-} // Webflow.destroy - Trigger a destroy event for all modules
-
-
-Webflow.destroy = function (options) {
-  options = options || {};
-  destroyed = true;
-  $win.triggerHandler('__wf_destroy'); // Allow domready reset for tests
-
-  if (options.domready != null) {
-    domready = options.domready;
-  } // Unbind modules
-
-
-  _.each(modules, unbindModule); // Clear any proxy event handlers
-
-
-  Webflow.resize.off();
-  Webflow.scroll.off();
-  Webflow.redraw.off(); // Clear any queued ready methods
-
-  primary = [];
-  secondary = []; // If load event has not yet fired, replace the deferred
-
-  if (deferLoad.state() === 'pending') {
-    bindLoad();
-  }
-}; // Listen for domready
-
-
-$(Webflow.ready); // Listen for window.onload and resolve deferred
-
-bindLoad(); // Export commonjs module
-
-module.exports = window.Webflow = Webflow;
-
-/***/ }),
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1765,7 +1765,7 @@ module.exports = function (it) {
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var definePropertyModule = __webpack_require__(16);
 var createPropertyDescriptor = __webpack_require__(59);
 
@@ -6746,7 +6746,7 @@ module.exports = g;
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 
 module.exports = function (it) {
   if (!isObject(it)) {
@@ -6844,7 +6844,7 @@ var DataView = __webpack_require__(391),
     Promise = __webpack_require__(392),
     Set = __webpack_require__(393),
     WeakMap = __webpack_require__(216),
-    baseGetTag = __webpack_require__(21),
+    baseGetTag = __webpack_require__(22),
     toSource = __webpack_require__(206);
 
 /** `Object#toString` result references. */
@@ -8000,7 +8000,7 @@ exports.IX2VanillaUtils = IX2VanillaUtils;
 /* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isObject = __webpack_require__(8);
 
 /** `Object#toString` result references. */
@@ -9218,7 +9218,7 @@ module.exports = function (object, key, value) {
 /* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 var isArray = __webpack_require__(43);
 var wellKnownSymbol = __webpack_require__(5);
 
@@ -9927,7 +9927,7 @@ module.exports = function (it) {
 /* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 
 // `ToPrimitive` abstract operation
 // https://tc39.github.io/ecma262/#sec-toprimitive
@@ -10001,7 +10001,7 @@ module.exports = false;
 
 var NATIVE_WEAK_MAP = __webpack_require__(322);
 var global = __webpack_require__(6);
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 var hide = __webpack_require__(25);
 var objectHas = __webpack_require__(15);
 var sharedKey = __webpack_require__(87);
@@ -10408,7 +10408,7 @@ module.exports = castPath;
 /* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isObjectLike = __webpack_require__(9);
 
 /** `Object#toString` result references. */
@@ -12363,7 +12363,7 @@ var _transform = _interopRequireDefault(__webpack_require__(681));
 
 var _constants = __webpack_require__(14);
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _DynamoFormattingUtils = __webpack_require__(308);
 
@@ -12990,7 +12990,7 @@ var _apolloClient = _interopRequireDefault(__webpack_require__(106));
 
 var _graphqlTag = _interopRequireDefault(__webpack_require__(49));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _StyleMapObserver = _interopRequireDefault(__webpack_require__(278));
 
@@ -13549,7 +13549,7 @@ module.exports = api;
 /* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var propertyIsEnumerableModule = __webpack_require__(186);
 var createPropertyDescriptor = __webpack_require__(59);
 var toIndexedObject = __webpack_require__(24);
@@ -19269,7 +19269,7 @@ exports["default"] = exports.register = exports.updateWebPaymentsButton = void 0
 
 var _graphqlTag = _interopRequireDefault(__webpack_require__(49));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _stripeStore = __webpack_require__(79);
 
@@ -20741,7 +20741,7 @@ window.tram = function (a) {
 
 var $ = __webpack_require__(1);
 var $includes = __webpack_require__(128).includes;
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 // `Array.prototype.includes` method
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
@@ -20779,7 +20779,7 @@ exports.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
 /* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var fails = __webpack_require__(12);
 var createElement = __webpack_require__(188);
 
@@ -20796,7 +20796,7 @@ module.exports = !DESCRIPTORS && !fails(function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 var global = __webpack_require__(6);
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 
 var document = global.document;
 // typeof document.createElement is 'object' in old IE
@@ -23771,7 +23771,7 @@ module.exports = _objectWithoutPropertiesLoose;
 /* 233 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isArray = __webpack_require__(2),
     isObjectLike = __webpack_require__(9);
 
@@ -24232,7 +24232,7 @@ module.exports = getFuncName;
 var $ = __webpack_require__(1);
 var fails = __webpack_require__(12);
 var isArray = __webpack_require__(43);
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 var toObject = __webpack_require__(10);
 var toLength = __webpack_require__(7);
 var createProperty = __webpack_require__(71);
@@ -36431,7 +36431,7 @@ exports.showErrorMessageForError = exports.isCartOpen = void 0;
 
 var _constants = __webpack_require__(14);
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 /* globals window */
 
 
@@ -36633,7 +36633,8 @@ __webpack_require__(460);
 __webpack_require__(461);
 __webpack_require__(697);
 __webpack_require__(698);
-module.exports = __webpack_require__(699);
+__webpack_require__(699);
+module.exports = __webpack_require__(700);
 
 
 /***/ }),
@@ -36651,7 +36652,7 @@ module.exports = __webpack_require__(699);
  * Webflow: Brand pages on the subdomain
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 Webflow.define('brand', module.exports = function ($) {
   var api = {};
@@ -37195,7 +37196,7 @@ module.exports = api;
  * Webflow: Interactions 2
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 var ix2 = __webpack_require__(319);
 
@@ -37334,7 +37335,7 @@ module.exports = isForced;
 /* 325 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var definePropertyModule = __webpack_require__(16);
 var anObject = __webpack_require__(36);
 var objectKeys = __webpack_require__(194);
@@ -39660,7 +39661,7 @@ module.exports = baseTimes;
 /* 387 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isObjectLike = __webpack_require__(9);
 
 /** `Object#toString` result references. */
@@ -39708,7 +39709,7 @@ module.exports = stubFalse;
 /* 389 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isLength = __webpack_require__(139),
     isObjectLike = __webpack_require__(9);
 
@@ -44794,7 +44795,7 @@ module.exports = baseClamp;
  * Webflow: Auto-select links to current page or section
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 Webflow.define('links', module.exports = function ($, _) {
   var api = {};
@@ -44924,7 +44925,7 @@ Webflow.define('links', module.exports = function ($, _) {
  * Webflow: Smooth scroll
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 Webflow.define('scroll', module.exports = function ($) {
   // Native browser events & namespaces used in this module
@@ -45134,7 +45135,7 @@ Webflow.define('scroll', module.exports = function ($) {
  * Adds a 'swipe' event to desktop and mobile
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 Webflow.define('touch', module.exports = function ($) {
   var api = {};
@@ -45268,7 +45269,7 @@ Webflow.define('touch', module.exports = function ($) {
  * Webflow: E-commerce
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 var commerce = __webpack_require__(462);
 
@@ -45321,7 +45322,7 @@ var _webPaymentsEvents = _interopRequireDefault(__webpack_require__(182));
 
 var _stripeStore = __webpack_require__(79);
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 __webpack_require__(691);
 
@@ -45551,12 +45552,12 @@ module.exports = String(test) !== '[object z]' ? function toString() {
 var $ = __webpack_require__(1);
 var global = __webpack_require__(6);
 var IS_PURE = __webpack_require__(85);
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var NATIVE_SYMBOL = __webpack_require__(193);
 var fails = __webpack_require__(12);
 var has = __webpack_require__(15);
 var isArray = __webpack_require__(43);
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 var anObject = __webpack_require__(36);
 var toObject = __webpack_require__(10);
 var toIndexedObject = __webpack_require__(24);
@@ -45896,10 +45897,10 @@ defineWellKnownSymbol('asyncIterator');
 // https://tc39.github.io/ecma262/#sec-symbol.prototype.description
 
 var $ = __webpack_require__(1);
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 var global = __webpack_require__(6);
 var has = __webpack_require__(15);
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 var defineProperty = __webpack_require__(16).f;
 var copyConstructorProperties = __webpack_require__(190);
 
@@ -46330,7 +46331,7 @@ module.exports = Object.setPrototypeOf || ('__proto__' in {} ? function () {
 /* 497 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 
 module.exports = function (it) {
   if (!isObject(it) && it !== null) {
@@ -46552,7 +46553,7 @@ $({ target: 'Array', stat: true, forced: ISNT_GENERIC }, {
 
 var $ = __webpack_require__(1);
 var copyWithin = __webpack_require__(507);
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 // `Array.prototype.copyWithin` method
 // https://tc39.github.io/ecma262/#sec-array.prototype.copywithin
@@ -46625,7 +46626,7 @@ $({ target: 'Array', proto: true, forced: sloppyArrayMethod('every') }, {
 
 var $ = __webpack_require__(1);
 var fill = __webpack_require__(510);
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 // `Array.prototype.fill` method
 // https://tc39.github.io/ecma262/#sec-array.prototype.fill
@@ -46689,7 +46690,7 @@ $({ target: 'Array', proto: true, forced: !arrayMethodHasSpeciesSupport('filter'
 
 var $ = __webpack_require__(1);
 var $find = __webpack_require__(31).find;
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 var FIND = 'find';
 var SKIPS_HOLES = true;
@@ -46717,7 +46718,7 @@ addToUnscopables(FIND);
 
 var $ = __webpack_require__(1);
 var $findIndex = __webpack_require__(31).findIndex;
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 var FIND_INDEX = 'findIndex';
 var SKIPS_HOLES = true;
@@ -46842,7 +46843,7 @@ $({ target: 'Array', proto: true, forced: NEGATIVE_ZERO || SLOPPY_METHOD }, {
 "use strict";
 
 var toIndexedObject = __webpack_require__(24);
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 var Iterators = __webpack_require__(75);
 var InternalStateModule = __webpack_require__(86);
 var defineIterator = __webpack_require__(246);
@@ -47054,7 +47055,7 @@ $({ target: 'Array', proto: true, forced: String(test) === String(test.reverse()
 "use strict";
 
 var $ = __webpack_require__(1);
-var isObject = __webpack_require__(19);
+var isObject = __webpack_require__(20);
 var isArray = __webpack_require__(43);
 var toAbsoluteIndex = __webpack_require__(61);
 var toLength = __webpack_require__(7);
@@ -47177,7 +47178,7 @@ setSpecies('Array');
 var getBuiltIn = __webpack_require__(126);
 var definePropertyModule = __webpack_require__(16);
 var wellKnownSymbol = __webpack_require__(5);
-var DESCRIPTORS = __webpack_require__(18);
+var DESCRIPTORS = __webpack_require__(19);
 
 var SPECIES = wellKnownSymbol('species');
 
@@ -47273,7 +47274,7 @@ $({ target: 'Array', proto: true, forced: !arrayMethodHasSpeciesSupport('splice'
 
 // this method was added to unscopables after implementation
 // in popular engines, so it's moved to a separate module
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 addToUnscopables('flat');
 
@@ -47284,7 +47285,7 @@ addToUnscopables('flat');
 
 // this method was added to unscopables after implementation
 // in popular engines, so it's moved to a separate module
-var addToUnscopables = __webpack_require__(20);
+var addToUnscopables = __webpack_require__(21);
 
 addToUnscopables('flatMap');
 
@@ -47295,8 +47296,8 @@ addToUnscopables('flatMap');
 
 "use strict";
 
-var DESCRIPTORS = __webpack_require__(18);
-var addToUnscopables = __webpack_require__(20);
+var DESCRIPTORS = __webpack_require__(19);
+var addToUnscopables = __webpack_require__(21);
 var toObject = __webpack_require__(10);
 var toLength = __webpack_require__(7);
 var defineProperty = __webpack_require__(16).f;
@@ -47328,8 +47329,8 @@ if (DESCRIPTORS && !('lastItem' in [])) {
 
 "use strict";
 
-var DESCRIPTORS = __webpack_require__(18);
-var addToUnscopables = __webpack_require__(20);
+var DESCRIPTORS = __webpack_require__(19);
+var addToUnscopables = __webpack_require__(21);
 var toObject = __webpack_require__(10);
 var toLength = __webpack_require__(7);
 var defineProperty = __webpack_require__(16).f;
@@ -52569,7 +52570,7 @@ module.exports = isArrayLikeObject;
 /* 576 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     getPrototype = __webpack_require__(104),
     isObjectLike = __webpack_require__(9);
 
@@ -55350,7 +55351,7 @@ var _defineProperty2 = _interopRequireDefault2(__webpack_require__(13));
 var _taggedTemplateLiteral2 = _interopRequireDefault2(__webpack_require__(48));
 
 function _templateObject2() {
-  var data = (0, _taggedTemplateLiteral2["default"])(["\n  query FetchAllVariants($productId: BasicId!) {\n    database {\n      id\n      collections {\n        c_sku_ {\n          items(filter: {f_product_: {eq: $productId}}) {\n            id\n            f_price_ {\n              value\n              unit\n            }\n            f_weight_\n            f_width_\n            f_length_\n            f_height_\n            f_sku_\n            f_main_image_4dr {\n              url\n            }\n            f_more_images_4dr {\n              url\n              alt\n              file {\n                origFileName\n              }\n            }\n            f_sku_values_3dr {\n              value {\n                id\n              }\n              property {\n                id\n              }\n            }\n            inventory {\n              type\n              quantity\n            }\n            f_compare_at_price_7dr10dr {\n              unit\n              value\n            }\n          }\n        }\n        c_product_ {\n          items(filter: {id: {eq: $productId}}) {\n            f_default_sku_7dr {\n              id\n            }\n          }\n        }\n      }\n    }\n  }\n"]);
+  var data = (0, _taggedTemplateLiteral2["default"])(["\n  query FetchAllVariants($productId: BasicId!) {\n    database {\n      id\n      collections {\n        c_sku_ {\n          items(filter: {f_product_: {eq: $productId}}) {\n            id\n            f_price_ {\n              value\n              unit\n            }\n            f_weight_\n            f_width_\n            f_length_\n            f_height_\n            f_sku_\n            f_main_image_4dr {\n              url\n            }\n            f_more_images_4dr {\n              url\n              alt\n              file {\n                origFileName\n              }\n            }\n            f_sku_values_3dr {\n              value {\n                id\n              }\n              property {\n                id\n              }\n            }\n            inventory {\n              type\n              quantity\n            }\n            f_compare_at_price_7dr10dr {\n              unit\n              value\n            }\n            f_ec_sku_billing_method_2dr6dr14dr\n          }\n        }\n        c_product_ {\n          items(filter: {id: {eq: $productId}}) {\n            f_default_sku_7dr {\n              id\n            }\n          }\n        }\n      }\n    }\n  }\n"]);
 
   _templateObject2 = function _templateObject2() {
     return data;
@@ -55392,7 +55393,7 @@ var _Commerce = __webpack_require__(292);
 
 var _eventHandlerProxyWithApolloClient = _interopRequireDefault(__webpack_require__(47));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _CurrencyUtils = __webpack_require__(294);
 
@@ -55562,19 +55563,13 @@ var handleAtcSubmit = function handleAtcSubmit(event, apolloClient) {
 
       if (!_errorMsg) {
         return;
-      } // Temporary error message if some one tries to purchase a subscription item via ATC
-      // Will remove in favor of hiding ATC all together once billing-method has been migrated
-
-
-      if (error.message === 'GraphQL error: SKU is a subscription') {
-        _errorMsg.textContent = 'Subscription items cannot be added to your cart. Try purchasing with the Buy now button.';
-      } else {
-        var errorType = error.graphQLErrors && error.graphQLErrors.length > 0 && error.graphQLErrors[0].code === 'OutOfInventory' ? 'quantity' : 'general';
-
-        var _errorText = _errorMsg.getAttribute((0, _constants.getATCErrorMessageForType)(errorType)) || '';
-
-        _errorMsg.textContent = _errorText;
       }
+
+      var errorType = error.graphQLErrors && error.graphQLErrors.length > 0 && error.graphQLErrors[0].code === 'OutOfInventory' ? 'quantity' : 'general';
+
+      var _errorText = _errorMsg.getAttribute((0, _constants.getATCErrorMessageForType)(errorType)) || '';
+
+      _errorMsg.textContent = _errorText;
     }
 
     _debug["default"].error(error);
@@ -55932,7 +55927,22 @@ var updatePageWithNewSkuValuesData = function updatePageWithNewSkuValuesData(ins
         var formsForProduct = document.querySelectorAll("[".concat(_constants.DATA_ATTR_NODE_TYPE, "=\"").concat(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM, "\"][").concat(_constants.DATA_ATTR_COMMERCE_PRODUCT_ID, "=\"").concat(instanceId, "\"]"));
         Array.from(formsForProduct).forEach(function (addToCartForm) {
           var collectionItemWrapper = findCollectionItemWrapper(addToCartForm);
-          var referenceRepeaters = queryAllReferenceRepeaters(collectionItemWrapper);
+          var referenceRepeaters = queryAllReferenceRepeaters(collectionItemWrapper); // Update the state of the buy now button text to handle subscription
+
+          var buyNowButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_BUY_NOW_BUTTON, addToCartForm);
+
+          if (buyNowButton) {
+            if (newSkuItem['f_ec_sku_billing_method_2dr6dr14dr'] === 'subscription') {
+              var addToCartButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON, addToCartForm);
+              var buyNowSubscriptionText = buyNowButton.getAttribute(_constants.DATA_ATTR_SUBSCRIPTION_TEXT) || 'Subscribe now';
+              hideElement(addToCartButton);
+              buyNowButton.innerText = buyNowSubscriptionText;
+            } else {
+              var buyNowDefaultText = buyNowButton.getAttribute(_constants.DATA_ATTR_DEFAULT_TEXT) || 'Buy now';
+              buyNowButton.innerText = buyNowDefaultText;
+            }
+          }
+
           var moreImagesFieldLength = newSkuItem.f_more_images_4dr && newSkuItem.f_more_images_4dr.length || 0;
 
           if (referenceRepeaters.length > 0) {
@@ -56114,6 +56124,20 @@ var handleAtcPageLoad = function handleAtcPageLoad(event, apolloClient, stripeSt
         });
 
         if (currentSku) {
+          // Set buy now text to subscription state if subscription
+          if (currentSku['f_ec_sku_billing_method_2dr6dr14dr'] === 'subscription') {
+            var addToCartButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON, addToCartForm);
+            hideElement(addToCartButton);
+
+            if (buyNowButton) {
+              var buyNowSubscriptionText = buyNowButton.getAttribute(_constants.DATA_ATTR_SUBSCRIPTION_TEXT) || 'Subscribe now';
+              buyNowButton.innerText = buyNowSubscriptionText;
+            }
+          } else if (buyNowButton) {
+            var buyNowDefaultText = buyNowButton.getAttribute(_constants.DATA_ATTR_DEFAULT_TEXT) || 'Buy now';
+            buyNowButton.innerText = buyNowDefaultText;
+          }
+
           var addToCartWrapper = addToCartForm.parentElement;
           var optionListElement = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST, addToCartWrapper);
           var outOfStockState = addToCartWrapper && addToCartWrapper.getElementsByClassName('w-commerce-commerceaddtocartoutofstock')[0]; // Check if exist a variant with stock
@@ -58930,7 +58954,7 @@ module.exports = baseAggregator;
 /* 614 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isObjectLike = __webpack_require__(9);
 
 /** `Object#toString` result references. */
@@ -65411,7 +65435,7 @@ function Node (value, prev, next, list) {
 /* 655 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isObjectLike = __webpack_require__(9);
 
 /** `Object#toString` result references. */
@@ -65479,7 +65503,7 @@ module.exports = isDate;
 /* 657 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(21),
+var baseGetTag = __webpack_require__(22),
     isObjectLike = __webpack_require__(9);
 
 /** `Object#toString` result references. */
@@ -67073,7 +67097,7 @@ var _constants = __webpack_require__(14);
 
 var _eventHandlerProxyWithApolloClient = _interopRequireDefault(__webpack_require__(47));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _stripeStore = __webpack_require__(79);
 
@@ -67977,7 +68001,7 @@ var _constants = __webpack_require__(14);
 
 var _eventHandlerProxyWithApolloClient = _interopRequireDefault(__webpack_require__(47));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _checkoutUtils = __webpack_require__(120);
 
@@ -68522,7 +68546,7 @@ var _qs = _interopRequireDefault(__webpack_require__(688));
 
 var _eventHandlerProxyWithApolloClient = _interopRequireDefault(__webpack_require__(47));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _rendering = __webpack_require__(119);
 
@@ -69725,7 +69749,7 @@ exports["default"] = exports.renderPaypalButtons = void 0;
 
 var _eventHandlerProxyWithApolloClient = _interopRequireDefault(__webpack_require__(47));
 
-var _commerceUtils = __webpack_require__(22);
+var _commerceUtils = __webpack_require__(23);
 
 var _checkoutUtils = __webpack_require__(120);
 
@@ -70063,7 +70087,7 @@ var _interopRequireDefault = __webpack_require__(0);
 
 var _slicedToArray2 = _interopRequireDefault(__webpack_require__(58));
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 Webflow.define('forms', module.exports = function ($, _) {
   var api = {};
@@ -70571,6 +70595,671 @@ Webflow.define('forms', module.exports = function ($, _) {
 "use strict";
  // @wf-will-never-add-flow-to-this-file
 
+/* globals window, document, jQuery */
+
+/* eslint-disable no-var */
+
+/**
+ * Webflow: Lightbox component
+ */
+
+var Webflow = __webpack_require__(18);
+
+var CONDITION_INVISIBLE_CLASS = 'w-condition-invisible';
+var CONDVIS_SELECTOR = '.' + CONDITION_INVISIBLE_CLASS;
+
+function withoutConditionallyHidden(items) {
+  return items.filter(function (item) {
+    return !isConditionallyHidden(item);
+  });
+}
+
+function isConditionallyHidden(item) {
+  return Boolean(item.$el && item.$el.closest(CONDVIS_SELECTOR).length);
+}
+
+function getPreviousVisibleIndex(start, items) {
+  for (var i = start; i >= 0; i--) {
+    if (!isConditionallyHidden(items[i])) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+function getNextVisibleIndex(start, items) {
+  for (var i = start; i <= items.length - 1; i++) {
+    if (!isConditionallyHidden(items[i])) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+function shouldSetArrowLeftInactive(currentIndex, items) {
+  return getPreviousVisibleIndex(currentIndex - 1, items) === -1;
+}
+
+function shouldSetArrowRightInactive(currentIndex, items) {
+  return getNextVisibleIndex(currentIndex + 1, items) === -1;
+}
+
+function createLightbox(window, document, $, container) {
+  var tram = $.tram;
+  var isArray = Array.isArray;
+  var namespace = 'w-lightbox';
+  var prefix = namespace + '-';
+  var prefixRegex = /(^|\s+)/g; // Array of objects describing items to be displayed.
+
+  var items = []; // Index of the currently displayed item.
+
+  var currentIndex; // Object holding references to jQuery wrapped nodes.
+
+  var $refs; // Instance of Spinner
+
+  var spinner;
+
+  function lightbox(thing, index) {
+    items = isArray(thing) ? thing : [thing];
+
+    if (!$refs) {
+      lightbox.build();
+    }
+
+    if (withoutConditionallyHidden(items).length > 1) {
+      $refs.items = $refs.empty;
+      items.forEach(function (item) {
+        var $thumbnail = dom('thumbnail');
+        var $item = dom('item').append($thumbnail);
+
+        if (isConditionallyHidden(item)) {
+          $item.addClass(CONDITION_INVISIBLE_CLASS);
+        }
+
+        $refs.items = $refs.items.add($item);
+        loadImage(item.thumbnailUrl || item.url, function ($image) {
+          if ($image.prop('width') > $image.prop('height')) {
+            addClass($image, 'wide');
+          } else {
+            addClass($image, 'tall');
+          }
+
+          $thumbnail.append(addClass($image, 'thumbnail-image'));
+        });
+      });
+      $refs.strip.empty().append($refs.items);
+      addClass($refs.content, 'group');
+    }
+
+    tram( // Focus the lightbox to receive keyboard events.
+    removeClass($refs.lightbox, 'hide').trigger('focus')).add('opacity .3s').start({
+      opacity: 1
+    }); // Prevent document from scrolling while lightbox is active.
+
+    addClass($refs.html, 'noscroll');
+    return lightbox.show(index || 0);
+  }
+  /**
+   * Creates the DOM structure required by the lightbox.
+   */
+
+
+  lightbox.build = function () {
+    // In case `build` is called more than once.
+    lightbox.destroy();
+    $refs = {
+      html: $(document.documentElement),
+      // Empty jQuery object can be used to build new ones using `.add`.
+      empty: $()
+    };
+    $refs.arrowLeft = dom('control left inactive');
+    $refs.arrowRight = dom('control right inactive');
+    $refs.close = dom('control close');
+    $refs.spinner = dom('spinner');
+    $refs.strip = dom('strip');
+    spinner = new Spinner($refs.spinner, prefixed('hide'));
+    $refs.content = dom('content').append($refs.spinner, $refs.arrowLeft, $refs.arrowRight, $refs.close);
+    $refs.container = dom('container').append($refs.content, $refs.strip);
+    $refs.lightbox = dom('backdrop hide').append($refs.container); // We are delegating events for performance reasons and also
+    // to not have to reattach handlers when images change.
+
+    $refs.strip.on('click', selector('item'), itemTapHandler);
+    $refs.content.on('swipe', swipeHandler).on('click', selector('left'), handlerPrev).on('click', selector('right'), handlerNext).on('click', selector('close'), handlerHide).on('click', selector('image, caption'), handlerNext);
+    $refs.container.on('click', selector('view'), handlerHide) // Prevent images from being dragged around.
+    .on('dragstart', selector('img'), preventDefault);
+    $refs.lightbox.on('keydown', keyHandler) // IE loses focus to inner nodes without letting us know.
+    .on('focusin', focusThis); // The `tabindex` attribute is needed to enable non-input elements
+    // to receive keyboard events.
+
+    $(container).append($refs.lightbox.prop('tabIndex', 0));
+    return lightbox;
+  };
+  /**
+   * Dispose of DOM nodes created by the lightbox.
+   */
+
+
+  lightbox.destroy = function () {
+    if (!$refs) {
+      return;
+    } // Event handlers are also removed.
+
+
+    removeClass($refs.html, 'noscroll');
+    $refs.lightbox.remove();
+    $refs = undefined;
+  };
+  /**
+   * Show a specific item.
+   */
+
+
+  lightbox.show = function (index) {
+    // Bail if we are already showing this item.
+    if (index === currentIndex) {
+      return;
+    }
+
+    var item = items[index];
+
+    if (!item) {
+      return lightbox.hide();
+    }
+
+    if (isConditionallyHidden(item)) {
+      if (index < currentIndex) {
+        var previousVisibleIndex = getPreviousVisibleIndex(index - 1, items);
+        index = previousVisibleIndex > -1 ? previousVisibleIndex : index;
+      } else {
+        var nextVisibleIndex = getNextVisibleIndex(index + 1, items);
+        index = nextVisibleIndex > -1 ? nextVisibleIndex : index;
+      }
+
+      item = items[index];
+    }
+
+    var previousIndex = currentIndex;
+    currentIndex = index;
+    spinner.show(); // For videos, load an empty SVG with the video dimensions to preserve
+    // the video’s aspect ratio while being responsive.
+
+    var url = item.html && svgDataUri(item.width, item.height) || item.url;
+    loadImage(url, function ($image) {
+      // Make sure this is the last item requested to be shown since
+      // images can finish loading in a different order than they were
+      // requested in.
+      if (index !== currentIndex) {
+        return;
+      }
+
+      var $figure = dom('figure', 'figure').append(addClass($image, 'image'));
+      var $frame = dom('frame').append($figure);
+      var $newView = dom('view').append($frame);
+      var $html;
+      var isIframe;
+
+      if (item.html) {
+        $html = $(item.html);
+        isIframe = $html.is('iframe');
+
+        if (isIframe) {
+          $html.on('load', transitionToNewView);
+        }
+
+        $figure.append(addClass($html, 'embed'));
+      }
+
+      if (item.caption) {
+        $figure.append(dom('caption', 'figcaption').text(item.caption));
+      }
+
+      $refs.spinner.before($newView);
+
+      if (!isIframe) {
+        transitionToNewView();
+      }
+
+      function transitionToNewView() {
+        spinner.hide();
+
+        if (index !== currentIndex) {
+          $newView.remove();
+          return;
+        }
+
+        toggleClass($refs.arrowLeft, 'inactive', shouldSetArrowLeftInactive(index, items));
+        toggleClass($refs.arrowRight, 'inactive', shouldSetArrowRightInactive(index, items));
+
+        if ($refs.view) {
+          tram($refs.view).add('opacity .3s').start({
+            opacity: 0
+          }).then(remover($refs.view));
+          tram($newView).add('opacity .3s').add('transform .3s').set({
+            x: index > previousIndex ? '80px' : '-80px'
+          }).start({
+            opacity: 1,
+            x: 0
+          });
+        } else {
+          $newView.css('opacity', 1);
+        }
+
+        $refs.view = $newView;
+
+        if ($refs.items) {
+          removeClass($refs.items, 'active'); // Mark proper thumbnail as active
+
+          var $activeThumb = $refs.items.eq(index);
+          addClass($activeThumb, 'active'); // Scroll into view
+
+          maybeScroll($activeThumb);
+        }
+      }
+    });
+    return lightbox;
+  };
+  /**
+   * Hides the lightbox.
+   */
+
+
+  lightbox.hide = function () {
+    tram($refs.lightbox).add('opacity .3s').start({
+      opacity: 0
+    }).then(hideLightbox);
+    return lightbox;
+  };
+
+  lightbox.prev = function () {
+    var previousVisibleIndex = getPreviousVisibleIndex(currentIndex - 1, items);
+
+    if (previousVisibleIndex > -1) {
+      lightbox.show(previousVisibleIndex);
+    }
+  };
+
+  lightbox.next = function () {
+    var nextVisibleIndex = getNextVisibleIndex(currentIndex + 1, items);
+
+    if (nextVisibleIndex > -1) {
+      lightbox.show(nextVisibleIndex);
+    }
+  };
+
+  function createHandler(action) {
+    return function (event) {
+      // We only care about events triggered directly on the bound selectors.
+      if (this !== event.target) {
+        return;
+      }
+
+      event.stopPropagation();
+      event.preventDefault();
+      action();
+    };
+  }
+
+  var handlerPrev = createHandler(lightbox.prev);
+  var handlerNext = createHandler(lightbox.next);
+  var handlerHide = createHandler(lightbox.hide);
+
+  var itemTapHandler = function itemTapHandler(event) {
+    var index = $(this).index();
+    event.preventDefault();
+    lightbox.show(index);
+  };
+
+  var swipeHandler = function swipeHandler(event, data) {
+    // Prevent scrolling.
+    event.preventDefault();
+
+    if (data.direction === 'left') {
+      lightbox.next();
+    } else if (data.direction === 'right') {
+      lightbox.prev();
+    }
+  };
+
+  var focusThis = function focusThis() {
+    this.focus();
+  };
+
+  function preventDefault(event) {
+    event.preventDefault();
+  }
+
+  function keyHandler(event) {
+    var keyCode = event.keyCode; // [esc]
+
+    if (keyCode === 27) {
+      lightbox.hide(); // [◀]
+    } else if (keyCode === 37) {
+      lightbox.prev(); // [▶]
+    } else if (keyCode === 39) {
+      lightbox.next();
+    }
+  }
+
+  function hideLightbox() {
+    // If the lightbox hasn't been destroyed already
+    if ($refs) {
+      // Reset strip scroll, otherwise next lightbox opens scrolled to last position
+      $refs.strip.scrollLeft(0).empty();
+      removeClass($refs.html, 'noscroll');
+      addClass($refs.lightbox, 'hide');
+      $refs.view && $refs.view.remove(); // Reset some stuff
+
+      removeClass($refs.content, 'group');
+      addClass($refs.arrowLeft, 'inactive');
+      addClass($refs.arrowRight, 'inactive');
+      currentIndex = $refs.view = undefined;
+    }
+  }
+
+  function loadImage(url, callback) {
+    var $image = dom('img', 'img');
+    $image.one('load', function () {
+      callback($image);
+    }); // Start loading image.
+
+    $image.attr('src', url);
+    return $image;
+  }
+
+  function remover($element) {
+    return function () {
+      $element.remove();
+    };
+  }
+
+  function maybeScroll($item) {
+    var itemElement = $item.get(0);
+    var stripElement = $refs.strip.get(0);
+    var itemLeft = itemElement.offsetLeft;
+    var itemWidth = itemElement.clientWidth;
+    var stripScrollLeft = stripElement.scrollLeft;
+    var stripWidth = stripElement.clientWidth;
+    var stripScrollLeftMax = stripElement.scrollWidth - stripWidth;
+    var newScrollLeft;
+
+    if (itemLeft < stripScrollLeft) {
+      newScrollLeft = Math.max(0, itemLeft + itemWidth - stripWidth);
+    } else if (itemLeft + itemWidth > stripWidth + stripScrollLeft) {
+      newScrollLeft = Math.min(itemLeft, stripScrollLeftMax);
+    }
+
+    if (newScrollLeft != null) {
+      tram($refs.strip).add('scroll-left 500ms').start({
+        'scroll-left': newScrollLeft
+      });
+    }
+  }
+  /**
+   * Spinner
+   */
+
+
+  function Spinner($spinner, className, delay) {
+    this.$element = $spinner;
+    this.className = className;
+    this.delay = delay || 200;
+    this.hide();
+  }
+
+  Spinner.prototype.show = function () {
+    // eslint-disable-next-line no-shadow
+    var spinner = this; // Bail if we are already showing the spinner.
+
+    if (spinner.timeoutId) {
+      return;
+    }
+
+    spinner.timeoutId = setTimeout(function () {
+      spinner.$element.removeClass(spinner.className); // eslint-disable-next-line webflow/no-delete
+
+      delete spinner.timeoutId;
+    }, spinner.delay);
+  };
+
+  Spinner.prototype.hide = function () {
+    // eslint-disable-next-line no-shadow
+    var spinner = this;
+
+    if (spinner.timeoutId) {
+      clearTimeout(spinner.timeoutId); // eslint-disable-next-line webflow/no-delete
+
+      delete spinner.timeoutId;
+      return;
+    }
+
+    spinner.$element.addClass(spinner.className);
+  };
+
+  function prefixed(string, isSelector) {
+    return string.replace(prefixRegex, (isSelector ? ' .' : ' ') + prefix);
+  }
+
+  function selector(string) {
+    return prefixed(string, true);
+  }
+  /**
+   * jQuery.addClass with auto-prefixing
+   * @param  {jQuery} Element to add class to
+   * @param  {string} Class name that will be prefixed and added to element
+   * @return {jQuery}
+   */
+
+
+  function addClass($element, className) {
+    return $element.addClass(prefixed(className));
+  }
+  /**
+   * jQuery.removeClass with auto-prefixing
+   * @param  {jQuery} Element to remove class from
+   * @param  {string} Class name that will be prefixed and removed from element
+   * @return {jQuery}
+   */
+
+
+  function removeClass($element, className) {
+    return $element.removeClass(prefixed(className));
+  }
+  /**
+   * jQuery.toggleClass with auto-prefixing
+   * @param  {jQuery}  Element where class will be toggled
+   * @param  {string}  Class name that will be prefixed and toggled
+   * @param  {boolean} Optional boolean that determines if class will be added or removed
+   * @return {jQuery}
+   */
+
+
+  function toggleClass($element, className, shouldAdd) {
+    return $element.toggleClass(prefixed(className), shouldAdd);
+  }
+  /**
+   * Create a new DOM element wrapped in a jQuery object,
+   * decorated with our custom methods.
+   * @param  {string} className
+   * @param  {string} [tag]
+   * @return {jQuery}
+   */
+
+
+  function dom(className, tag) {
+    return addClass($(document.createElement(tag || 'div')), className);
+  }
+
+  function svgDataUri(width, height) {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"/>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURI(svg);
+  } // Compute some dimensions manually for iOS < 8, because of buggy support for VH.
+  // Also, Android built-in browser does not support viewport units.
+
+
+  (function () {
+    var ua = window.navigator.userAgent;
+    var iOSRegex = /(iPhone|iPad|iPod);[^OS]*OS (\d)/;
+    var iOSMatches = ua.match(iOSRegex);
+    var android = ua.indexOf('Android ') > -1 && ua.indexOf('Chrome') === -1;
+
+    if (!android && (!iOSMatches || iOSMatches[2] > 7)) {
+      return;
+    }
+
+    var styleNode = document.createElement('style');
+    document.head.appendChild(styleNode);
+    window.addEventListener('resize', refresh, true);
+
+    function refresh() {
+      var vh = window.innerHeight;
+      var vw = window.innerWidth;
+      var content = '.w-lightbox-content, .w-lightbox-view, .w-lightbox-view:before {' + 'height:' + vh + 'px' + '}' + '.w-lightbox-view {' + 'width:' + vw + 'px' + '}' + '.w-lightbox-group, .w-lightbox-group .w-lightbox-view, .w-lightbox-group .w-lightbox-view:before {' + 'height:' + 0.86 * vh + 'px' + '}' + '.w-lightbox-image {' + 'max-width:' + vw + 'px;' + 'max-height:' + vh + 'px' + '}' + '.w-lightbox-group .w-lightbox-image {' + 'max-height:' + 0.86 * vh + 'px' + '}' + '.w-lightbox-strip {' + 'padding: 0 ' + 0.01 * vh + 'px' + '}' + '.w-lightbox-item {' + 'width:' + 0.1 * vh + 'px;' + 'padding:' + 0.02 * vh + 'px ' + 0.01 * vh + 'px' + '}' + '.w-lightbox-thumbnail {' + 'height:' + 0.1 * vh + 'px' + '}' + '@media (min-width: 768px) {' + '.w-lightbox-content, .w-lightbox-view, .w-lightbox-view:before {' + 'height:' + 0.96 * vh + 'px' + '}' + '.w-lightbox-content {' + 'margin-top:' + 0.02 * vh + 'px' + '}' + '.w-lightbox-group, .w-lightbox-group .w-lightbox-view, .w-lightbox-group .w-lightbox-view:before {' + 'height:' + 0.84 * vh + 'px' + '}' + '.w-lightbox-image {' + 'max-width:' + 0.96 * vw + 'px;' + 'max-height:' + 0.96 * vh + 'px' + '}' + '.w-lightbox-group .w-lightbox-image {' + 'max-width:' + 0.823 * vw + 'px;' + 'max-height:' + 0.84 * vh + 'px' + '}' + '}';
+      styleNode.textContent = content;
+    }
+
+    refresh();
+  })();
+
+  return lightbox;
+}
+
+Webflow.define('lightbox', module.exports = function ($) {
+  var api = {};
+  var inApp = Webflow.env();
+  var lightbox = createLightbox(window, document, $, inApp ? '#lightbox-mountpoint' : 'body');
+  var $doc = $(document);
+  var $lightboxes;
+  var designer;
+  var namespace = '.w-lightbox';
+  var groups; // -----------------------------------
+  // Module methods
+
+  api.ready = api.design = api.preview = init; // -----------------------------------
+  // Private methods
+
+  function init() {
+    designer = inApp && Webflow.env('design'); // Reset Lightbox
+
+    lightbox.destroy(); // Reset groups
+
+    groups = {}; // Find all instances on the page
+
+    $lightboxes = $doc.find(namespace); // Instantiate all lighboxes
+
+    $lightboxes.webflowLightBox();
+  }
+
+  jQuery.fn.extend({
+    webflowLightBox: function webflowLightBox() {
+      var $el = this;
+      $.each($el, function (i, el) {
+        // Store state in data
+        var data = $.data(el, namespace);
+
+        if (!data) {
+          data = $.data(el, namespace, {
+            el: $(el),
+            mode: 'images',
+            images: [],
+            embed: ''
+          });
+        } // Remove old events
+
+
+        data.el.off(namespace); // Set config from json script tag
+
+        configure(data); // Add events based on mode
+
+        if (designer) {
+          data.el.on('setting' + namespace, configure.bind(null, data));
+        } else {
+          data.el.on('click' + namespace, clickHandler(data)) // Prevent page scrolling to top when clicking on lightbox triggers.
+          .on('click' + namespace, function (e) {
+            e.preventDefault();
+          });
+        }
+      });
+    }
+  });
+
+  function configure(data) {
+    var json = data.el.children('.w-json').html();
+    var groupName;
+    var groupItems;
+
+    if (!json) {
+      data.items = [];
+      return;
+    }
+
+    try {
+      json = JSON.parse(json);
+    } catch (e) {
+      console.error('Malformed lightbox JSON configuration.', e);
+    }
+
+    supportOldLightboxJson(json);
+    json.items.forEach(function (item) {
+      item.$el = data.el;
+    });
+    groupName = json.group;
+
+    if (groupName) {
+      groupItems = groups[groupName];
+
+      if (!groupItems) {
+        groupItems = groups[groupName] = [];
+      }
+
+      data.items = groupItems;
+
+      if (json.items.length) {
+        data.index = groupItems.length;
+        groupItems.push.apply(groupItems, json.items);
+      }
+    } else {
+      data.items = json.items;
+      data.index = 0;
+    }
+  }
+
+  function clickHandler(data) {
+    return function () {
+      data.items.length && lightbox(data.items, data.index || 0);
+    };
+  }
+
+  function supportOldLightboxJson(data) {
+    if (data.images) {
+      data.images.forEach(function (item) {
+        item.type = 'image';
+      });
+      data.items = data.images;
+    }
+
+    if (data.embed) {
+      data.embed.type = 'video';
+      data.items = [data.embed];
+    }
+
+    if (data.groupId) {
+      data.group = data.groupId;
+    }
+  } // Export module
+
+
+  return api;
+});
+
+/***/ }),
+/* 699 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+ // @wf-will-never-add-flow-to-this-file
+
 /* globals window, document */
 
 /* eslint-disable no-var */
@@ -70579,7 +71268,7 @@ Webflow.define('forms', module.exports = function ($, _) {
  * Webflow: Navbar component
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 var IXEvents = __webpack_require__(121);
 
@@ -71164,7 +71853,7 @@ Webflow.define('navbar', module.exports = function ($, _) {
 });
 
 /***/ }),
-/* 699 */
+/* 700 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -71178,7 +71867,7 @@ Webflow.define('navbar', module.exports = function ($, _) {
  * Webflow: Tabs component
  */
 
-var Webflow = __webpack_require__(23);
+var Webflow = __webpack_require__(18);
 
 var IXEvents = __webpack_require__(121);
 

@@ -8,7 +8,8 @@ collections:
   - name: "pages"
     label: "Pages"
     folder: "site/pages"
-    identifier_field: "name"
+    identifier_field: "title"
+    extension: "md"
     create: false
     delete: false
     slug: "{{slug}}"
@@ -67,6 +68,7 @@ collections:
     folder: "site/product"
     create: true
     identifier_field: "name"
+    extension: "md"
     slug: "{{slug}}"
     editor:
       preview: false
@@ -134,7 +136,7 @@ collections:
         label: "SKU Properties"
       - widget: "relation"
         collection: "category"
-        value_field: "undefined/{{slug}}.md"
+        value_field: "site/undefined/{{slug}}.md"
         search_fields:
           - "slug"
           - "name"
@@ -159,13 +161,13 @@ collections:
             label: "Taxable"
       - widget: "relation"
         collection: "sku"
-        value_field: "sku/{{slug}}.md"
+        value_field: "site/sku/{{slug}}.md"
         search_fields:
           - "slug"
           - "name"
         display_fields:
           - "name"
-        required: true
+        required: false
         name: "default-sku"
       - label: "Body"
         name: "body"
@@ -204,6 +206,7 @@ collections:
     folder: "site/sku"
     create: true
     identifier_field: "name"
+    extension: "md"
     slug: "{{slug}}"
     editor:
       preview: false
@@ -271,13 +274,13 @@ collections:
         label: "SKU Values"
       - widget: "relation"
         collection: "product"
-        value_field: "product/{{slug}}.md"
+        value_field: "site/product/{{slug}}.md"
         search_fields:
           - "slug"
           - "name"
         display_fields:
           - "name"
-        required: true
+        required: false
         name: "product"
       - widget: "object"
         name: "main-image"
@@ -1061,6 +1064,7 @@ collections:
     folder: "site/category"
     create: true
     identifier_field: "name"
+    extension: "md"
     slug: "{{slug}}"
     editor:
       preview: false

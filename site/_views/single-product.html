@@ -113,7 +113,20 @@ body{
   <div class="content-section-short">
     <div class="container">
       <div class="w-layout-grid product-grid">
-        <div class="product-image-wrapper">{%- assign ref = item | resolveReference: "default-sku", "sku" -%}<img data-commerce-type="variation-image" src="{{ ref.data['main-image'].url | escape }}" alt="{{ item.data.name | escape }}" class="product-image"></div>
+        <div class="product-image-wrapper">{%- assign ref = item | resolveReference: "default-sku", "sku" -%}<img data-commerce-type="variation-image" src="{{ ref.data['main-image'].url | escape }}" alt="{{ item.data.name | escape }}" class="product-image">
+          {%- assign ref = item | resolveReference: "default-sku", "sku" -%}{%- assign set = ref.data['more-images'] -%}<div class="collection-list-wrapper w-dyn-list" set="true" data-commerce-type="more-images" data-template-id="more-images-8fe845ce-730a-9523-1f71-72fdae032605">
+            {%- if set.length > 0 -%}<div role="list" class="collection-list w-dyn-items">
+              {%- for setItem in set -%}<div role="listitem" class="collection-item w-dyn-item">
+                <a href="#" class="w-inline-block w-lightbox"><img loading="lazy" src="{{ setItem.url | escape }}" alt="">
+                  <script type="application/json" class="w-json">{"items":[{"type":"image","url":"{{ setItem.url }}","caption":""}]}</script>
+                </a>
+              </div>{%- endfor -%}
+            </div>{%- endif -%}
+            {%- unless set.length > 0 -%}<div class="w-dyn-empty">
+              <div>No items found.</div>
+            </div>{%- endunless -%}
+          </div>
+        </div>
         <div class="product-content">
           <h3>{{ item.data.name }}</h3>
           {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<div data-commerce-type="variation-price" class="price-text">{{ ref.data.price | formatPrice }}</div>
@@ -121,7 +134,7 @@ body{
           <div class="full-details w-richtext">{{ item.data.content }}</div>
           <div>
             {%- assign ref = item | resolveReference: "default-sku", "sku" -%}<form data-node-type="commerce-add-to-cart-form" class="w-commerce-commerceaddtocartform">{%- for prop in item.data['sku-properties'] -%}<fieldset data-node-type="add-to-cart-option" name="data-sku-property"><label>{{ prop.name }}</label><select class="w-select" style="display: none;" name="{{ prop.name }}">{% for option in prop.enum %}<option value="{{ option.name | slugify }}">{{option.name}}</option>{% endfor %}</select><div class="w-commerce-commerceaddtocartoptionpillgroup" aria-label="{{ prop.name | escape }}">{%- for option in prop.enum -%}<div class="variation-button w-commerce-commerceaddtocartoptionpill" data-option-name="{{ option.name | slugify }}"><div>{{ option.name }}</div></div>{%- endfor -%}</div></fieldset>{%- endfor -%}<label for="quantity-77d000eb734842aa4cf87b0bb03800c1">Quantity</label><input type="number" pattern="^[0-9]+$" inputmode="numeric" id="quantity-77d000eb734842aa4cf87b0bb03800c1" name="commerce-add-to-cart-quantity-input" min="1" class="w-commerce-commerceaddtocartquantityinput" value="1"><input type="submit" data-node-type="commerce-add-to-cart-button" data-loading-text="Adding to cart..." value="Add to Cart" class="w-commerce-commerceaddtocartbutton order-button">
-              <a href="/checkout/" data-node-type="commerce-buy-now-button" data-default-text="Buy now" data-subscription-text="Subscribe now" class="w-commerce-commercebuynowbutton order-button">Buy now</a>
+              <a href="/checkout/" data-node-type="commerce-buy-now-button" data-default-text="Buy now" data-subscription-text="Subscribe now" style="display:none" class="w-commerce-commercebuynowbutton order-button">Buy now</a>
             <script type="application/json">{{ collections._variations[item.data.slug].variationsData | json }}</script></form>
             <div style="display:none" class="w-commerce-commerceaddtocartoutofstock">
               <div>This product is out of stock.</div>
@@ -251,7 +264,20 @@ body{
   <script src="/static/js/webflow.js" type="text/javascript" async="" defer=""></script>
   <!-- [if lte IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/placeholders/3.0.2/placeholders.min.js"></script><![endif] -->
 
-<script src="/static/js/udesly-11ty.min.js" defer="" async=""></script><script>document.querySelectorAll('link[rel="preload"]').forEach(function(e) { e.rel = "stylesheet" })</script><div id="snipcart" hidden="" data-api-key="N2ExODMxNmYtNjg0OC00OTIwLTg4NzItMzc5ZmE5NTA3YjRmNjM3MDAxNTYwMjkzMDE4NzQ1" data-config-add-product-behavior="none"></div><script>window.ecommerceUtils = {
+<script src="/static/js/udesly-11ty.min.js" defer="" async=""></script><template id="more-images-8fe845ce-730a-9523-1f71-72fdae032605">
+            <div bind="8fe845ce-730a-9523-1f71-72fdae032606" role="list" class="collection-list w-dyn-items">
+              <div bind="8fe845ce-730a-9523-1f71-72fdae032607" role="listitem" class="collection-item w-dyn-item">
+                <a href="#" bind="3c2f05cc-ddd6-03e0-379d-405e32f02af3" class="w-inline-block w-lightbox"><img loading="lazy" bind="3c2f05cc-ddd6-03e0-379d-405e32f02af4" src="/static/" alt="">
+                  <script type="application/json" class="w-json">{
+  "items": []
+}</script>
+                </a>
+              </div>
+            </div>
+            <div bind="8fe845ce-730a-9523-1f71-72fdae032608" class="w-dyn-empty">
+              <div>No items found.</div>
+            </div>
+          </template><script>document.querySelectorAll('link[rel="preload"]').forEach(function(e) { e.rel = "stylesheet" })</script><div id="snipcart" hidden="" data-api-key="N2ExODMxNmYtNjg0OC00OTIwLTg4NzItMzc5ZmE5NTA3YjRmNjM3MDAxNTYwMjkzMDE4NzQ1" data-config-add-product-behavior="none"></div><script>window.ecommerceUtils = {
       priceTemplate: function(amount, currencyCode) {
             amount = amount.toLocaleString('en-UK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/gm, ',').replace(/\./gm, '.');
             return `$ ${amount} USD`;

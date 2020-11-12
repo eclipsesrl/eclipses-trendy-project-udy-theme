@@ -112,7 +112,7 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
 
               items.forEach(item => {
                 let a = getProperty(item.data, field.fieldPath, getProperty(item.data, "slug", undefined));
-                
+                let b = a;
                 if (a) {
                   if (!a.includes("/")) {
                     const s = a;
@@ -130,11 +130,16 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
                       })
                     }
                   }
-                  const index = ("/" + a).replace('.md', '');
+                  const index = ("/" + b).replace('.md', '');
+                  const index2 = index + ".md"
                   if (!newCollections[index]) {
                     newCollections[index] = []
                   }
+                  if (!newCollections[index2]) {
+                    newCollections[index2] = []
+                  }
                   newCollections[index].push(item);
+                  newCollections[index2].push(item);
                 }
               });
             }
@@ -240,7 +245,7 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
           } else {
             items.forEach(item => {
               let a = getProperty(item.data, field.fieldPath, getProperty(item.data, "slug", undefined));
-              
+              let b = a;
               if (a) {
                 if (!a.includes("/")) {
                   const s = a;
@@ -258,11 +263,16 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
                     })
                   }
                 }
-                const index = ("/" + a).replace('.md', '');
-                if (!newCollections[index]) {
-                  newCollections[index] = []
-                }
-                newCollections[index].push(item);
+                const index = ("/" + b).replace('.md', '');
+                  const index2 = index + ".md"
+                  if (!newCollections[index]) {
+                    newCollections[index] = []
+                  }
+                  if (!newCollections[index2]) {
+                    newCollections[index2] = []
+                  }
+                  newCollections[index].push(item);
+                  newCollections[index2].push(item);
               }
             });
           }
@@ -351,6 +361,8 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
     items.forEach(product => {
       const properties = product.data['sku-properties'] || [];
 
+      const shippable = !!product.data['shippable'];
+
       const productSlug = `product/${product.data.slug}.md`;
       const variations = skus.filter(sku =>
         sku.data.product == productSlug
@@ -363,6 +375,19 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
                     })
                     skuValues = obj;
                   }
+        let dimensions = {width: 0, height: 0, length: 0, weight: 0};
+        if (sku.data['width']) {
+          dimensions.width = sku.data['width'];
+        }          
+        if (sku.data['height']) {
+          dimensions.height = sku.data['height'];
+        }   
+        if (sku.data['length']) {
+          dimensions.width = sku.data['length'];
+        }   
+        if (sku.data['weight']) {
+          dimensions.weight = sku.data['weight'];
+        }   
         return {
           id: sku.data.slug,
           slug: sku.data.slug,
@@ -371,7 +396,10 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
           compareAtPrice: sku.data['compare-at-price'],
           "sku-values": skuValues,
           "main-image": sku.data['main-image'],
-          name: sku.data.name
+          "more-images": sku.data['more-images'],
+          name: sku.data.name,
+          shippable,
+          dimensions
         }
       });
       const item = {
@@ -398,9 +426,9 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
 
       if (typeof itemField == "string") {
 
-        let refSlug = itemField.includes('.md') ? itemField.split('/')[1].replace('.md', '') : itemField;
+        let refSlug = itemField.includes('.md') ? itemField.split('/')[2].replace('.md', '') : itemField;
         if (!fieldType) {
-          itemField.split('/')[0]
+          fieldType = itemField.split('/')[1];
         }
 
         ref = findBySlug(fieldType, refSlug);
@@ -421,9 +449,9 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
     if (itemField && Array.isArray(itemField)) {
 
       ref = itemField.map(e => {
-        let refSlug = e.includes('.md') ? e.split('/')[1].replace('.md', '') : e;
+        let refSlug = e.includes('.md') ? e.split('/')[2].replace('.md', '') : e;
         if (!fieldType) {
-          e.split('/')[0]
+          fieldType = e.split('/')[1];
         }
         findBySlug(fieldType, refSlug);
       });
@@ -509,6 +537,9 @@ module.exports = function (eleventyConfig, ecommerceFormat, priceTemplate) {
       return format(d, formatString);
     } catch (error) {
       const d = new Date(date);
+      if (isNaN(d)) {
+        return format(new Date(), "yyyy-MM-dd")
+      }
       return format(d, "yyyy-MM-dd");
     }
   });
